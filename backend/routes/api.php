@@ -35,10 +35,13 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Réclamations
     Route::apiResource('reclamations', ReclamationController::class);
+    Route::post('reclamations/{reclamation}', [ReclamationController::class, 'update']); // Support FormData
     Route::post('reclamations/{reclamation}/soumettre', [ReclamationController::class, 'soumettre']);
     Route::put('reclamations/{reclamation}/verifier', [ReclamationController::class, 'verifier']);
     Route::put('reclamations/{reclamation}/imputer', [ReclamationController::class, 'imputer']);
     Route::put('reclamations/{reclamation}/traiter', [ReclamationController::class, 'traiter']);
+    Route::put('reclamations/{reclamation}/transmettre-scolarite', [ReclamationController::class, 'transmettreScolarite']);
+    Route::put('reclamations/{reclamation}/finaliser', [ReclamationController::class, 'finaliser']);
     
     // Justificatifs
     Route::post('reclamations/{reclamation}/justificatifs', [JustificatifController::class, 'store']);

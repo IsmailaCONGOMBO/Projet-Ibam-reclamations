@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { reclamationService } from '../../services/reclamationService';
+import JustificatifViewer from '../JustificatifViewer';
 
 const TraiterReclamationForm = ({ reclamation, onSuccess, onCancel }) => {
   const [decision, setDecision] = useState('');
@@ -7,6 +8,20 @@ const TraiterReclamationForm = ({ reclamation, onSuccess, onCancel }) => {
   const [commentaire, setCommentaire] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [reclamationDetails, setReclamationDetails] = useState(null);
+
+  useEffect(() => {
+    loadReclamationDetails();
+  }, [reclamation.id]);
+
+  const loadReclamationDetails = async () => {
+    try {
+      const data = await reclamationService.getById(reclamation.id);
+      setReclamationDetails(data);
+    } catch (err) {
+      console.error('Erreur chargement détails');
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -14,11 +29,17 @@ const TraiterReclamationForm = ({ reclamation, onSuccess, onCancel }) => {
     setError('');
 
     try {
-      await reclamationService.traiter(reclamation.id, {
+      const payload = {
         decision,
-        note_corrigee: decision === 'VALIDEE' ? parseFloat(noteCorrigee) : null,
         commentaire
-      });
+      };
+
+      // Ajouter note_corrigee seulement si la décision est VALIDEE
+      if (decision === 'VALIDEE') {
+        payload.note_corrigee = parseFloat(noteCorrigee);
+      }
+
+      await reclamationService.traiter(reclamation.id, payload);
       onSuccess?.();
     } catch (err) {
       setError(err.response?.data?.message || 'Erreur lors du traitement');
@@ -42,7 +63,7 @@ const TraiterReclamationForm = ({ reclamation, onSuccess, onCancel }) => {
           </div>
           <div>
             <h3 className="font-medium text-gray-900">Étudiant</h3>
-            <p className="text-gray-600">{reclamation.etudiant?.name} ({reclamation.etudiant?.matricule})</p>
+            <p className="text-gray-600">{reclamation.etudiant?.prenom} {reclamation.etudiant?.nom} ({reclamation.etudiant?.matricule})</p>
           </div>
           <div>
             <h3 className="font-medium text-gray-900">Matière</h3>
@@ -66,6 +87,9 @@ const TraiterReclamationForm = ({ reclamation, onSuccess, onCancel }) => {
               <p className="text-gray-600">{reclamation.commentaire_scolarite}</p>
             </div>
           )}
+          <div className="md:col-span-2">
+            <JustificatifViewer justificatifs={reclamationDetails?.justificatifs || []} />
+          </div>
         </div>
       </div>
 

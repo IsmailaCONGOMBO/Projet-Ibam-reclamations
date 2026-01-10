@@ -20,9 +20,9 @@ return new class extends Migration
             $table->text('objet_demande');
             $table->text('motif');
             $table->enum('statut', [
-                'BROUILLON', 'SOUMISE', 'EN_ATTENTE_VERIFICATION', 'RECEVABLE', 'REJETEE',
-                'IMPUTEE_ENSEIGNANT', 'VALIDEE', 'INVALIDEE', 'TRANSMISE_SCOLARITE',
-                'TRAITEE_NOTE_CORRIGEE', 'TRAITEE_NON_VALIDEE'
+                'BROUILLON', 'SOUMISE', 'RECEVABLE', 'REJETEE',
+                'IMPUTEE_ENSEIGNANT', 'VALIDEE_ENSEIGNANT', 'INVALIDEE_ENSEIGNANT', 
+                'TRANSMISE_SCOLARITE', 'FINALISEE'
             ])->default('BROUILLON');
             $table->decimal('note_actuelle', 4, 2)->nullable();
             $table->decimal('note_corrigee', 4, 2)->nullable();

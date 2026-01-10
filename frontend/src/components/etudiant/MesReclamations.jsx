@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import ReclamationDetails from '../ReclamationDetails';
+import EditReclamationForm from './EditReclamationForm';
 
 const MesReclamations = () => {
   const [reclamations, setReclamations] = useState([]);
   const [selectedReclamationId, setSelectedReclamationId] = useState(null);
+  const [editingReclamation, setEditingReclamation] = useState(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -36,6 +38,19 @@ const MesReclamations = () => {
     };
     return colors[statut] || 'bg-gray-100 text-gray-800';
   };
+
+  if (editingReclamation) {
+    return (
+      <EditReclamationForm
+        reclamation={editingReclamation}
+        onSuccess={() => {
+          setEditingReclamation(null);
+          loadReclamations();
+        }}
+        onCancel={() => setEditingReclamation(null)}
+      />
+    );
+  }
 
   if (selectedReclamationId) {
     return (
@@ -96,6 +111,14 @@ const MesReclamations = () => {
                     >
                       Voir détails
                     </button>
+                    {reclamation.statut === 'BROUILLON' && (
+                      <button
+                        onClick={() => setEditingReclamation(reclamation)}
+                        className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700"
+                      >
+                        Modifier
+                      </button>
+                    )}
                   </div>
                 </div>
               </li>

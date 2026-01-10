@@ -22,11 +22,10 @@ class ReclamationController extends Controller
                 $query->where('etudiant_id', $user->id);
                 break;
             case 'ENSEIGNANT':
-                $query->whereHas('matiere', fn($q) => $q->where('filiere_id', $user->filiere_id))
-                      ->whereIn('statut', ['IMPUTEE_ENSEIGNANT', 'VALIDEE', 'INVALIDEE']);
+                $query->where('enseignant_id', $user->id);
                 break;
             case 'SCOLARITE':
-                $query->whereNotIn('statut', ['BROUILLON']);
+                // Voir toutes les réclamations (historique complet)
                 break;
             case 'DA':
                 // Voir toutes les réclamations
@@ -98,26 +97,28 @@ class ReclamationController extends Controller
             return response()->json(['message' => 'Impossible de modifier une réclamation soumise'], 403);
         }
 
-        $request->validate([
-            'filiere_id' => 'sometimes|exists:filieres,id',
-            'matiere_id' => 'sometimes|exists:matieres,id',
-            'objet_demande' => 'sometimes|string|max:255',
-            'motif' => 'sometimes|string|min:10',
-            'justificatif' => 'sometimes|file|mimes:jpeg,jpg,png,pdf|max:5120'
-        ]);
-
-        // Vérifier la cohérence filière/matière si les deux sont fournis
-        if ($request->has(['filiere_id', 'matiere_id'])) {
-            $matiere = \App\Models\Matiere::where('id', $request->matiere_id)
-                                          ->where('filiere_id', $request->filiere_id)
-                                          ->first();
-            
-            if (!$matiere) {
-                return response()->json(['message' => 'La matière ne correspond pas à la filière sélectionnée'], 422);
-            }
+        // Gérer _method pour FormData
+        if ($request->has('_method') && $request->_method === 'PUT') {
+            // C'est une requête FormData avec _method=PUT
         }
 
-        $reclamation->update($request->only(['matiere_id', 'objet_demande', 'motif']));
+        // Validation simple
+        if (!$request->matiere_id || !$request->objet_demande || !$request->motif) {
+            return response()->json(['message' => 'Tous les champs obligatoires doivent être remplis'], 422);
+        }
+
+        // Mettre à jour l'enseignant_id basé sur la matière
+        $matiere = \App\Models\Matiere::find($request->matiere_id);
+        if (!$matiere) {
+            return response()->json(['message' => 'Matière non trouvée'], 422);
+        }
+        
+        $reclamation->update([
+            'matiere_id' => $request->matiere_id,
+            'enseignant_id' => $matiere->enseignant_id,
+            'objet_demande' => $request->objet_demande,
+            'motif' => $request->motif
+        ]);
 
         // Gérer le nouveau justificatif si fourni
         if ($request->hasFile('justificatif')) {
@@ -212,13 +213,53 @@ class ReclamationController extends Controller
             'commentaire' => 'nullable|string'
         ]);
 
-        $reclamation->update([
-            'statut' => $request->decision,
-            'note_corrigee' => $request->note_corrigee,
+        $updateData = [
+            'statut' => $request->decision === 'VALIDEE' ? 'VALIDEE_ENSEIGNANT' : 'INVALIDEE_ENSEIGNANT',
             'decision_enseignant' => $request->commentaire,
             'date_traitement' => now()
+        ];
+
+        // Ajouter la note corrigée seulement si la décision est VALIDEE
+        if ($request->decision === 'VALIDEE') {
+            $updateData['note_corrigee'] = $request->note_corrigee;
+        }
+
+        $reclamation->update($updateData);
+
+        return response()->json(['message' => 'Réclamation traitée et transmise à l\'administration']);
+    }
+
+    public function transmettreScolarite(Reclamation $reclamation)
+    {
+        if (!in_array($reclamation->statut, ['VALIDEE_ENSEIGNANT', 'INVALIDEE_ENSEIGNANT'])) {
+            return response()->json(['message' => 'Réclamation non traitée par l\'enseignant'], 400);
+        }
+
+        $reclamation->update([
+            'statut' => $reclamation->statut === 'VALIDEE_ENSEIGNANT' ? 'TRANSMISE_SCOLARITE' : 'REJETEE'
         ]);
 
-        return response()->json(['message' => 'Réclamation traitée']);
+        $message = $reclamation->statut === 'REJETEE' 
+            ? 'Réclamation rejetée définitivement' 
+            : 'Réclamation transmise à la scolarité';
+
+        return response()->json(['message' => $message]);
+    }
+
+    public function finaliser(Request $request, Reclamation $reclamation)
+    {
+        $request->validate([
+            'note_finale' => 'required|numeric|min:0|max:20',
+            'commentaire_final' => 'nullable|string'
+        ]);
+
+        $reclamation->update([
+            'statut' => 'FINALISEE',
+            'note_finale' => $request->note_finale,
+            'commentaire_final' => $request->commentaire_final,
+            'date_finalisation' => now()
+        ]);
+
+        return response()->json(['message' => 'Réclamation finalisée et étudiant notifié']);
     }
 }

@@ -79,25 +79,22 @@ const ReclamationsList = ({ onEdit, onView }) => {
         </div>
       ) : (
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
+          <table className="min-w-full divide-y divide-gray-200" style={{minWidth: '800px'}}>
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-32">
                   N° Demande
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-40">
                   Matière
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Objet
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-32">
                   Statut
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-28">
                   Date
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-40">
                   Actions
                 </th>
               </tr>
@@ -105,24 +102,21 @@ const ReclamationsList = ({ onEdit, onView }) => {
             <tbody className="bg-white divide-y divide-gray-200">
               {reclamations.map((reclamation) => (
                 <tr key={reclamation.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
                     {reclamation.numero_demande}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
                     {reclamation.matiere?.nom_matiere}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-500">
-                    {reclamation.objet_demande}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-4 py-3 whitespace-nowrap">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(reclamation.statut)}`}>
                       {reclamation.statut}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {reclamation.created_at}
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                    {new Date(reclamation.created_at).toLocaleDateString()}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm space-x-2">
+                  <td className="px-4 py-3 whitespace-nowrap text-sm space-x-2">
                     <button
                       onClick={() => onView?.(reclamation)}
                       className="text-blue-600 hover:text-blue-900"

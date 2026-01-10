@@ -17,6 +17,12 @@ export const reclamationService = {
   },
 
   async update(id, data) {
+    // Utiliser POST avec _method pour les FormData
+    if (data instanceof FormData) {
+      data.append('_method', 'PUT');
+      const response = await api.post(`/reclamations/${id}`, data);
+      return response.data;
+    }
     const response = await api.put(`/reclamations/${id}`, data);
     return response.data;
   },
@@ -43,6 +49,16 @@ export const reclamationService = {
 
   async traiter(id, data) {
     const response = await api.put(`/reclamations/${id}/traiter`, data);
+    return response.data;
+  },
+
+  async transmettreScolarite(id) {
+    const response = await api.put(`/reclamations/${id}/transmettre-scolarite`);
+    return response.data;
+  },
+
+  async finaliser(id, data) {
+    const response = await api.put(`/reclamations/${id}/finaliser`, data);
     return response.data;
   },
 

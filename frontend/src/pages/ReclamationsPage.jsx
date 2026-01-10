@@ -2,11 +2,13 @@ import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import CreateReclamationForm from '../components/etudiant/CreateReclamationForm';
+import EditReclamationForm from '../components/etudiant/EditReclamationForm';
 import ReclamationsList from '../components/etudiant/ReclamationsList';
 import ReclamationDetails from '../components/ReclamationDetails';
 
 const ReclamationsPage = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [editingReclamation, setEditingReclamation] = useState(null);
   const [selectedReclamation, setSelectedReclamation] = useState(null);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -26,8 +28,7 @@ const ReclamationsPage = () => {
   };
 
   const handleEdit = (reclamation) => {
-    // TODO: Implémenter l'édition
-    alert('Fonctionnalité d\'édition à venir');
+    setEditingReclamation(reclamation);
   };
 
   return (
@@ -69,6 +70,14 @@ const ReclamationsPage = () => {
             <CreateReclamationForm
               onSuccess={handleCreateSuccess}
               onCancel={() => setShowCreateForm(false)}
+            />
+          ) : editingReclamation ? (
+            <EditReclamationForm
+              reclamation={editingReclamation}
+              onSuccess={() => {
+                setEditingReclamation(null);
+              }}
+              onCancel={() => setEditingReclamation(null)}
             />
           ) : selectedReclamation ? (
             <ReclamationDetails

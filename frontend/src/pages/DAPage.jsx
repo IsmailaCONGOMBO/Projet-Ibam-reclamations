@@ -3,11 +3,13 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { reclamationService } from '../services/reclamationService';
 import ReclamationDetails from '../components/ReclamationDetails';
+import TransmettreScolariteForm from '../components/admin/TransmettreScolariteForm';
 
 const DAPage = () => {
   const [reclamations, setReclamations] = useState([]);
   const [selectedReclamation, setSelectedReclamation] = useState(null);
   const [viewingDetails, setViewingDetails] = useState(false);
+  const [transmettingToScolarite, setTransmettingToScolarite] = useState(false);
   const [filter, setFilter] = useState('ALL');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -52,9 +54,10 @@ const DAPage = () => {
       'RECEVABLE': 'bg-green-100 text-green-800',
       'REJETEE': 'bg-red-100 text-red-800',
       'IMPUTEE_ENSEIGNANT': 'bg-yellow-100 text-yellow-800',
-      'VALIDEE': 'bg-green-100 text-green-800',
-      'INVALIDEE': 'bg-red-100 text-red-800',
-      'TRAITEE_NOTE_CORRIGEE': 'bg-green-100 text-green-800'
+      'VALIDEE_ENSEIGNANT': 'bg-green-100 text-green-800',
+      'INVALIDEE_ENSEIGNANT': 'bg-red-100 text-red-800',
+      'TRANSMISE_SCOLARITE': 'bg-purple-100 text-purple-800',
+      'FINALISEE': 'bg-green-100 text-green-800'
     };
     return colors[statut] || 'bg-gray-100 text-gray-800';
   };
@@ -121,6 +124,19 @@ const DAPage = () => {
               onClose={() => {
                 setSelectedReclamation(null);
                 setViewingDetails(false);
+              }}
+            />
+          ) : selectedReclamation && transmettingToScolarite ? (
+            <TransmettreScolariteForm
+              reclamation={selectedReclamation}
+              onSuccess={() => {
+                setSelectedReclamation(null);
+                setTransmettingToScolarite(false);
+                loadReclamations();
+              }}
+              onCancel={() => {
+                setSelectedReclamation(null);
+                setTransmettingToScolarite(false);
               }}
             />
           ) : selectedReclamation ? (
@@ -196,9 +212,19 @@ const DAPage = () => {
                 <div className="mt-6 pt-6 border-t">
                   <button
                     onClick={() => handleImputer(selectedReclamation.id)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md"
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md mr-4"
                   >
                     Imputer à l'enseignant
+                  </button>
+                </div>
+              )}
+              {(selectedReclamation.statut === 'VALIDEE_ENSEIGNANT' || selectedReclamation.statut === 'INVALIDEE_ENSEIGNANT') && (
+                <div className="mt-6 pt-6 border-t">
+                  <button
+                    onClick={() => setTransmettingToScolarite(true)}
+                    className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md"
+                  >
+                    Transmettre à la Scolarité
                   </button>
                 </div>
               )}
@@ -263,78 +289,85 @@ const DAPage = () => {
               )}
 
               <div className="bg-white shadow rounded-lg overflow-hidden">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        N° Demande
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        Étudiant
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        Matière
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        Enseignant
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        Statut
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        Date
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredReclamations.map((reclamation) => (
-                      <tr key={reclamation.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          {reclamation.numero_demande}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {reclamation.etudiant?.name}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {reclamation.matiere?.nom_matiere}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {reclamation.matiere?.enseignant?.name || 'Non assigné'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(reclamation.statut)}`}>
-                            {reclamation.statut}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {reclamation.created_at}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm space-x-2">
-                          <button
-                            onClick={() => {
-                              setSelectedReclamation(reclamation);
-                              setViewingDetails(true);
-                            }}
-                            className="text-blue-600 hover:text-blue-900"
-                          >
-                            Voir détails
-                          </button>
-                          {reclamation.statut === 'RECEVABLE' && (
-                            <button
-                              onClick={() => handleImputer(reclamation.id)}
-                              className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm"
-                            >
-                              Imputer
-                            </button>
-                          )}
-                        </td>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200" style={{minWidth: '1000px'}}>
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-32">
+                          N° Demande
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-40">
+                          Étudiant
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-40">
+                          Matière
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-32">
+                          Statut
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-28">
+                          Date
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-48">
+                          Actions
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {filteredReclamations.map((reclamation) => (
+                        <tr key={reclamation.id} className="hover:bg-gray-50">
+                          <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {reclamation.numero_demande}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                            {reclamation.etudiant?.name}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                            {reclamation.matiere?.nom_matiere}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(reclamation.statut)}`}>
+                              {reclamation.statut}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                            {new Date(reclamation.created_at).toLocaleDateString()}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm space-x-2">
+                            <button
+                              onClick={() => {
+                                setSelectedReclamation(reclamation);
+                                setViewingDetails(true);
+                              }}
+                              className="text-blue-600 hover:text-blue-900"
+                            >
+                              Voir détails
+                            </button>
+                            {reclamation.statut === 'RECEVABLE' && (
+                              <button
+                                onClick={() => handleImputer(reclamation.id)}
+                                className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm"
+                              >
+                                Imputer
+                              </button>
+                            )}
+                            {(reclamation.statut === 'VALIDEE_ENSEIGNANT' || reclamation.statut === 'INVALIDEE_ENSEIGNANT') && (
+                              <button
+                                onClick={() => {
+                                  setSelectedReclamation(reclamation);
+                                  setTransmettingToScolarite(true);
+                                }}
+                                className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded text-sm"
+                              >
+                                Transmettre
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}
