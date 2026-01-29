@@ -22,6 +22,17 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('users', UserController::class);
     });
     
+    // Route spécifique pour la scolarité - accès aux étudiants
+    Route::middleware('role:SCOLARITE,DA')->group(function () {
+        Route::get('/etudiants', [UserController::class, 'getEtudiants']);
+    });
+    
+    // Routes spécifiques pour l'enseignant
+    Route::middleware('role:ENSEIGNANT')->group(function () {
+        Route::get('/enseignant/{enseignant}/matieres', [UserController::class, 'getMatieres']);
+        Route::get('/matiere/{matiere}/etudiants', [UserController::class, 'getEtudiantsByMatiere']);
+    });
+    
     // Filières
     Route::get('/filieres', [FiliereController::class, 'index']);
     Route::post('/filieres', [FiliereController::class, 'store'])->middleware('role:DA');

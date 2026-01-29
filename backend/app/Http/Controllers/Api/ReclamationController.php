@@ -31,6 +31,39 @@ class ReclamationController extends Controller
                 // Voir toutes les réclamations
                 break;
         }
+        
+        // Filtre par statut
+        if ($request->has('statut') && $request->statut) {
+            $query->where('statut', $request->statut);
+        }
+        
+        // Filtre par filière
+        if ($request->has('filiere_id') && $request->filiere_id) {
+            $query->whereHas('etudiant', function($q) use ($request) {
+                $q->where('filiere_id', $request->filiere_id);
+            });
+        }
+        
+        // Filtre par matière
+        if ($request->has('matiere_id') && $request->matiere_id) {
+            $query->where('matiere_id', $request->matiere_id);
+        }
+        
+        // Recherche par numéro de demande, nom d'étudiant ou matière
+        if ($request->has('search') && $request->search) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('numero_demande', 'LIKE', "%{$search}%")
+                  ->orWhereHas('etudiant', function($subQ) use ($search) {
+                      $subQ->where('nom', 'LIKE', "%{$search}%")
+                           ->orWhere('prenom', 'LIKE', "%{$search}%")
+                           ->orWhere('matricule', 'LIKE', "%{$search}%");
+                  })
+                  ->orWhereHas('matiere', function($subQ) use ($search) {
+                      $subQ->where('nom_matiere', 'LIKE', "%{$search}%");
+                  });
+            });
+        }
 
         return response()->json($query->latest()->get());
     }

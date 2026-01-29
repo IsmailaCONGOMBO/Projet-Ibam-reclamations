@@ -9,6 +9,9 @@ import EnseignantPage from './pages/EnseignantPage';
 import DAPage from './pages/DAPage';
 import UsersList from './components/admin/UsersList';
 import FiliereManagement from './components/admin/FiliereManagement';
+import StudentsListPage from './pages/StudentsListPage';
+import TeacherStudentsPage from './pages/TeacherStudentsPage';
+import AdminStudentsPage from './pages/AdminStudentsPage';
 
 function App() {
   return (
@@ -69,6 +72,30 @@ function App() {
             element={
               <ProtectedRoute roles={['DA']}>
                 <FiliereManagement />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/students-list" 
+            element={
+              <ProtectedRoute roles={['SCOLARITE']}>
+                <StudentsListPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/teacher-students" 
+            element={
+              <ProtectedRoute roles={['ENSEIGNANT']}>
+                <TeacherStudentsPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin-students" 
+            element={
+              <ProtectedRoute roles={['DA']}>
+                <AdminStudentsPage />
               </ProtectedRoute>
             } 
           />

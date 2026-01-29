@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import CreateReclamationForm from '../components/etudiant/CreateReclamationForm';
 import EditReclamationForm from '../components/etudiant/EditReclamationForm';
 import ReclamationsList from '../components/etudiant/ReclamationsList';
@@ -12,6 +12,13 @@ const ReclamationsPage = () => {
   const [selectedReclamation, setSelectedReclamation] = useState(null);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get('action') === 'create') {
+      setShowCreateForm(true);
+    }
+  }, [searchParams]);
 
   const handleLogout = async () => {
     await logout();

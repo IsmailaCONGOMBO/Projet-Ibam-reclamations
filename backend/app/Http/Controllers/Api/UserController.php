@@ -70,11 +70,33 @@ class UserController extends Controller
 
     public function index(Request $request)
     {
-        $role = $request->get('role');
         $query = User::with('filiere');
         
-        if ($role) {
-            $query->where('role', $role);
+        // Filtre par rôle
+        if ($request->has('role') && $request->role) {
+            $query->where('role', $request->role);
+        }
+        
+        // Filtre par filière
+        if ($request->has('filiere_id') && $request->filiere_id) {
+            $query->where('filiere_id', $request->filiere_id);
+        }
+        
+        // Filtre par niveau
+        if ($request->has('niveau') && $request->niveau) {
+            $query->where('niveau', $request->niveau);
+        }
+        
+        // Recherche par nom, prénom, email ou matricule
+        if ($request->has('search') && $request->search) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('nom', 'LIKE', "%{$search}%")
+                  ->orWhere('prenom', 'LIKE', "%{$search}%")
+                  ->orWhere('email', 'LIKE', "%{$search}%")
+                  ->orWhere('matricule', 'LIKE', "%{$search}%")
+                  ->orWhere('ine', 'LIKE', "%{$search}%");
+            });
         }
 
         return response()->json($query->get());
@@ -110,5 +132,59 @@ class UserController extends Controller
     {
         $user->delete();
         return response()->json(['message' => 'Utilisateur supprimé']);
+    }
+
+    public function getEtudiants(Request $request)
+    {
+        $query = User::with('filiere')
+            ->where('role', 'ETUDIANT');
+        
+        // Filtrer par filière si spécifié
+        if ($request->has('filiere_id') && $request->filiere_id) {
+            $query->where('filiere_id', $request->filiere_id);
+        }
+        
+        // Filtrer par niveau si spécifié
+        if ($request->has('niveau') && $request->niveau) {
+            $query->where('niveau', $request->niveau);
+        }
+        
+        // Recherche par nom, prénom, matricule ou INE
+        if ($request->has('search') && $request->search) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('nom', 'LIKE', "%{$search}%")
+                  ->orWhere('prenom', 'LIKE', "%{$search}%")
+                  ->orWhere('matricule', 'LIKE', "%{$search}%")
+                  ->orWhere('ine', 'LIKE', "%{$search}%");
+            });
+        }
+        
+        return response()->json($query->get());
+    }
+
+    public function getMatieres(User $enseignant)
+    {
+        $matieres = Matiere::where('enseignant_id', $enseignant->id)
+            ->with('filiere')
+            ->get();
+        
+        return response()->json($matieres);
+    }
+
+    public function getEtudiantsByMatiere(Matiere $matiere)
+    {
+        // Vérifier que l'utilisateur connecté est l'enseignant de cette matière
+        if (auth()->user()->id !== $matiere->enseignant_id) {
+            return response()->json(['message' => 'Non autorisé'], 403);
+        }
+        
+        // Récupérer les étudiants de la filière de cette matière
+        $etudiants = User::with('filiere')
+            ->where('role', 'ETUDIANT')
+            ->where('filiere_id', $matiere->filiere_id)
+            ->get();
+        
+        return response()->json($etudiants);
     }
 }

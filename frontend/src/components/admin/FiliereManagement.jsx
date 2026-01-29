@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 
 const FiliereManagement = () => {
   const [filieres, setFilieres] = useState([]);
@@ -6,6 +8,8 @@ const FiliereManagement = () => {
   const [showCreateFiliere, setShowCreateFiliere] = useState(false);
   const [showCreateMatiere, setShowCreateMatiere] = useState(false);
   const [selectedFiliere, setSelectedFiliere] = useState(null);
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
 
   const [filiereForm, setFiliereForm] = useState({
     code_filiere: '',
@@ -108,9 +112,48 @@ const FiliereManagement = () => {
   };
 
   return (
-    <div className="p-6">
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white/80 backdrop-blur-sm border-b border-gray-100 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-6">
+            <div className="flex items-center space-x-4">
+              <div className="h-12 w-12 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
+                <span className="text-white font-bold text-lg">IBAM</span>
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                  Gestion Filières & Matières
+                </h1>
+                <p className="text-gray-600">
+                  {user.name} - Directeur Adjoint
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="text-gray-600 hover:text-gray-900 px-4 py-2 rounded-lg hover:bg-gray-100 transition-all duration-200"
+              >
+                Tableau de bord
+              </button>
+              <button
+                onClick={async () => {
+                  await logout();
+                  navigate('/login');
+                }}
+                className="bg-red-50 hover:bg-red-100 text-red-600 px-6 py-3 rounded-xl font-medium transition-all duration-200 hover:shadow-md"
+              >
+                Déconnexion
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Gestion Filières & Matières</h1>
+        <h2 className="text-xl font-bold text-gray-900">Administration des Filières</h2>
         <div className="space-x-2">
           <button
             onClick={() => setShowCreateFiliere(true)}
@@ -244,6 +287,7 @@ const FiliereManagement = () => {
             </div>
           </div>
         ))}
+      </div>
       </div>
     </div>
   );
