@@ -9,7 +9,9 @@ export const reclamationService = {
 
     // Créer une réclamation (avec support fichier)
     create: async (data) => {
-        // Si c'est du FormData, axios le détecte, mais on peut forcer le header si besoin
+        // IMPORTANT: On force le Content-Type à null/undefined pour que le navigateur génère 
+        // automatiquement le header 'multipart/form-data; boundary=...' correct.
+        // Sinon le header par défaut 'application/json' de l'instance api prend le dessus.
         const response = await api.post('/reclamations', data, {
             headers: { 'Content-Type': 'multipart/form-data' }
         });

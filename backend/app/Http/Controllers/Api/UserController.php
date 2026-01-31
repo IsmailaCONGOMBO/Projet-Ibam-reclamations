@@ -14,9 +14,15 @@ class UserController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        return User::with('roles')->get();
+        $query = User::with('roles');
+        
+        if ($request->has('role')) {
+            $query->role($request->role);
+        }
+
+        return $query->get();
     }
 
     /**

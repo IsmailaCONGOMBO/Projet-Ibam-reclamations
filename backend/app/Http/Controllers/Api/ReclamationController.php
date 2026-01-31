@@ -49,30 +49,36 @@ class ReclamationController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'objet' => 'required|string|max:255',
-            'message' => 'required|string',
-            'type' => 'required|string',
-            'matiere_id' => 'required|exists:matieres,id',
-            'piece_jointe' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120', // Obligatoire, PDF/Image, max 5MB
-        ]);
+        try {
+            $request->validate([
+                'objet' => 'required|string|max:255',
+                'message' => 'required|string',
+                'type' => 'required|string',
+                'matiere_id' => 'required|exists:matieres,id',
+                'piece_jointe' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120', // Obligatoire, PDF/Image, max 5MB
+            ]);
 
-        $path = null;
-        if ($request->hasFile('piece_jointe')) {
-            $path = $request->file('piece_jointe')->store('justificatifs', 'public');
+            $path = null;
+            if ($request->hasFile('piece_jointe')) {
+                $path = $request->file('piece_jointe')->store('justificatifs', 'public');
+            }
+
+            $reclamation = Reclamation::create([
+                'objet' => $request->objet,
+                'message' => $request->message,
+                'type' => $request->type,
+                'status' => 'BROUILLON', // Par défaut
+                'etudiant_id' => Auth::id(),
+                'matiere_id' => $request->matiere_id,
+                'piece_jointe' => $path,
+            ]);
+
+            return response()->json($reclamation, 201);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+             return response()->json(['errors' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Erreur serveur: ' . $e->getMessage(), 'trace' => $e->getTraceAsString()], 500);
         }
-
-        $reclamation = Reclamation::create([
-            'objet' => $request->objet,
-            'message' => $request->message,
-            'type' => $request->type,
-            'status' => 'BROUILLON', // Par défaut
-            'etudiant_id' => Auth::id(),
-            'matiere_id' => $request->matiere_id,
-            'piece_jointe' => $path,
-        ]);
-
-        return response()->json($reclamation, 201);
     }
 
     /**

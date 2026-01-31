@@ -16,7 +16,17 @@ return new class extends Migration
             $table->string('objet');
             $table->text('message');
             $table->string('type');
-            $table->enum('status', ['BROUILLON', 'SOUMIS', 'EN_TRAITEMENT', 'TRAITE', 'VALIDE_SCOLARITE', 'REJETE', 'FINALISE'])->default('BROUILLON');
+            $table->enum('status', [
+                'BROUILLON', 
+                'SOUMIS', 
+                'RECEVABLE', 
+                'REJETE', 
+                'EN_TRAITEMENT', 
+                'VALIDE_ENSEIGNANT', 
+                'INVALIDE_ENSEIGNANT', 
+                'TRANSMIS_SCOLARITE',
+                'TRAITE'
+            ])->default('BROUILLON');
             $table->foreignId('etudiant_id')->constrained('users');
             $table->foreignId('matiere_id')->constrained('matieres');
             $table->foreignId('enseignant_id')->nullable()->constrained('users');

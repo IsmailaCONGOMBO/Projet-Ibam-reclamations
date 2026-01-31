@@ -24,6 +24,10 @@ export default function EditReclamationForm({ reclamation, onSuccess }) {
     const onSubmit = async (data) => {
         try {
             const formData = new FormData();
+            console.log('Form Data received:', data);
+            console.log('Piece jointe raw:', data.piece_jointe);
+            console.log('Piece jointe verify:', data.piece_jointe?.[0]);
+
             formData.append('objet', data.objet);
             formData.append('message', data.message);
             formData.append('type', data.type);
@@ -43,7 +47,10 @@ export default function EditReclamationForm({ reclamation, onSuccess }) {
             onSuccess();
         } catch (error) {
             console.error('Error saving reclamation:', error);
-            alert('Erreur lors de la sauvegarde');
+            const msg = error.response?.data?.errors
+                ? Object.values(error.response.data.errors).flat().join('\n')
+                : (error.response?.data?.message || 'Erreur lors de la sauvegarde');
+            alert(msg);
         }
     };
 
