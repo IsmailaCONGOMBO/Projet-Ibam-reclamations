@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { reclamationService } from '../../services/reclamationService';
 import { userService } from '../../services/userService'; // Assuming this service exists
+import JustificatifViewer from '../JustificatifViewer';
 
 export default function ImputerForm({ reclamation, onSuccess, onCancel }) {
     const [enseignants, setEnseignants] = useState([]);
@@ -50,6 +51,9 @@ export default function ImputerForm({ reclamation, onSuccess, onCancel }) {
             <div className="mb-4">
                 <p className="text-sm text-gray-600">Matière: <span className="font-semibold">{reclamation.matiere?.nom_matiere}</span></p>
                 <p className="text-sm text-gray-600">Étudiant: <span className="font-semibold">{reclamation.etudiant?.name}</span></p>
+                <div className="mt-2">
+                    <JustificatifViewer piece_jointe={reclamation.piece_jointe} reclamationId={reclamation.id} />
+                </div>
             </div>
 
             {error && (

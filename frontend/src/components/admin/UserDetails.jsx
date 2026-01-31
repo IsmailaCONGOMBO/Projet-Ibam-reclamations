@@ -29,7 +29,7 @@ const UserDetails = ({ userId, onClose }) => {
   if (!user) return <div className="text-center py-4">Utilisateur non trouvé</div>;
 
   return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 bg-gray-600 bg-opacity-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-96 overflow-y-auto">
         <div className="px-6 py-4 border-b border-gray-200">
           <div className="flex justify-between items-center">

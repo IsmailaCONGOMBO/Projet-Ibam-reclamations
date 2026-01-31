@@ -55,4 +55,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('reclamations/{reclamation}/justificatifs', [JustificatifController::class, 'store']);
     Route::get('justificatifs/{justificatif}/download', [JustificatifController::class, 'download']);
     Route::delete('justificatifs/{justificatif}', [JustificatifController::class, 'destroy']);
+    
+    // Download piece_jointe principale
+    Route::get('reclamations/{reclamation}/download', [ReclamationController::class, 'downloadPieceJointe']);
 });

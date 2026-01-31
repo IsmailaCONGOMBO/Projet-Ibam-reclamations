@@ -22,9 +22,12 @@ class ReclamationController extends Controller
         }
 
         if ($user->hasRole('SCOLARITE')) {
-            // Scolarité voit les réclamations validées par les enseignants ou finalisées
+            // Scolarité voit :
+            // - SOUMIS (pour valider la recevabilité)
+            // - TRANSMIS_SCOLARITE (pour finaliser)
+            // - TRAITE, REJETE (Historique)
             return Reclamation::with(['etudiant', 'matiere', 'enseignant'])
-                ->whereIn('status', ['TRAITE', 'VALIDE_SCOLARITE', 'FINALISE'])
+                ->whereIn('status', ['SOUMIS', 'TRANSMIS_SCOLARITE', 'TRAITE', 'REJETE', 'RECEVABLE'])
                 ->latest()
                 ->get();
         }
@@ -206,5 +209,17 @@ class ReclamationController extends Controller
         }
 
         return response()->json($reclamation);
+    }
+
+    public function downloadPieceJointe(Reclamation $reclamation)
+    {
+        $this->authorize('view', $reclamation);
+
+        if (!$reclamation->piece_jointe) {
+            return response()->json(['message' => 'Aucun fichier joint'], 404);
+        }
+
+        // Utiliser le disque 'public' car c'est là qu'on a stocké le fichier via store(..., 'public')
+        return Storage::disk('public')->download($reclamation->piece_jointe);
     }
 }

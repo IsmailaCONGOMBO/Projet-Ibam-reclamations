@@ -62,6 +62,11 @@ class ReclamationPolicy
             && $reclamation->status === 'BROUILLON';
     }
 
+    public function verifier(User $user, Reclamation $reclamation)
+    {
+        return $user->hasRole(['SCOLARITE', 'DA']);
+    }
+
     public function imputer(User $user, Reclamation $reclamation)
     {
         return $user->hasRole(['DA', 'SCOLARITE']);

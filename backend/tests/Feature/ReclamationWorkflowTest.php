@@ -54,9 +54,9 @@ class ReclamationWorkflowTest extends TestCase
         $scolarite->assignRole('SCOLARITE');
 
 
-        // 2. Student SUBMITS Reclamation
+        // 2. Student SUBMITS Reclamation with PDF
         Storage::fake('public');
-        $file = UploadedFile::fake()->image('preuve.jpg');
+        $file = UploadedFile::fake()->create('justificatif.pdf', 100, 'application/pdf');
 
         $response = $this->actingAs($etudiant)->postJson('/api/reclamations', [
             'objet' => 'Erreur de note test',

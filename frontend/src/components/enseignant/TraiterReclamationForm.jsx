@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { reclamationService } from '../../services/reclamationService';
 import { useForm } from 'react-hook-form';
+import JustificatifViewer from '../JustificatifViewer';
 
 export default function TraiterReclamationForm({ reclamation, onSuccess }) {
     const { register, handleSubmit, watch, formState: { isSubmitting } } = useForm();
@@ -26,6 +27,10 @@ export default function TraiterReclamationForm({ reclamation, onSuccess }) {
     return (
         <div className="bg-white p-6 rounded-lg shadow mt-4 border border-indigo-200">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Traitement Enseignant</h3>
+
+            <div className="mb-6">
+                <JustificatifViewer piece_jointe={reclamation.piece_jointe} reclamationId={reclamation.id} />
+            </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 <div>

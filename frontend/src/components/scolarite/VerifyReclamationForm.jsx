@@ -68,14 +68,18 @@ const VerifyReclamationForm = ({ reclamation, onSuccess, onCancel }) => {
           </div>
           <div className="md:col-span-2">
             <h3 className="font-medium text-gray-900">Objet</h3>
-            <p className="text-gray-600">{reclamation.objet_demande}</p>
+            <p className="text-gray-600">{reclamation.objet}</p>
           </div>
           <div className="md:col-span-2">
             <h3 className="font-medium text-gray-900">Motif</h3>
-            <p className="text-gray-600">{reclamation.motif}</p>
+            <p className="text-gray-600">{reclamation.message}</p>
           </div>
           <div className="md:col-span-2">
-            <JustificatifViewer justificatifs={reclamationDetails?.justificatifs || []} />
+            <JustificatifViewer
+              piece_jointe={reclamation.piece_jointe}
+              justificatifs={reclamationDetails?.justificatifs || []}
+              reclamationId={reclamation.id}
+            />
           </div>
         </div>
       </div>
@@ -129,8 +133,8 @@ const VerifyReclamationForm = ({ reclamation, onSuccess, onCancel }) => {
             type="submit"
             disabled={loading}
             className={`px-4 py-2 text-white rounded-md disabled:opacity-50 ${decision === 'RECEVABLE'
-                ? 'bg-green-600 hover:bg-green-700'
-                : 'bg-red-600 hover:bg-red-700'
+              ? 'bg-green-600 hover:bg-green-700'
+              : 'bg-red-600 hover:bg-red-700'
               }`}
           >
             {loading ? 'Traitement...' : `Marquer comme ${decision}`}

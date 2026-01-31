@@ -84,9 +84,9 @@ const CreateReclamationForm = ({ onSuccess, onCancel }) => {
       formDataToSend.append('objet_demande', formData.objet_demande);
       formDataToSend.append('motif', formData.motif);
       if (formData.justificatif) {
-        formDataToSend.append('justificatif', formData.justificatif);
+        formDataToSend.append('piece_jointe', formData.justificatif);
       }
-      
+
       await reclamationService.create(formDataToSend);
       onSuccess?.();
     } catch (err) {
