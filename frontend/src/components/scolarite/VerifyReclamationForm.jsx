@@ -28,10 +28,11 @@ const VerifyReclamationForm = ({ reclamation, onSuccess, onCancel }) => {
     setError('');
 
     try {
-      await reclamationService.verifier(reclamation.id, {
-        decision,
+      await reclamationService.verifier(
+        reclamation.id,
+        decision === 'RECEVABLE', // true if RECEVABLE, false if REJETEE
         commentaire
-      });
+      );
       onSuccess?.();
     } catch (err) {
       setError(err.response?.data?.message || 'Erreur lors de la vérification');
@@ -127,11 +128,10 @@ const VerifyReclamationForm = ({ reclamation, onSuccess, onCancel }) => {
           <button
             type="submit"
             disabled={loading}
-            className={`px-4 py-2 text-white rounded-md disabled:opacity-50 ${
-              decision === 'RECEVABLE' 
-                ? 'bg-green-600 hover:bg-green-700' 
+            className={`px-4 py-2 text-white rounded-md disabled:opacity-50 ${decision === 'RECEVABLE'
+                ? 'bg-green-600 hover:bg-green-700'
                 : 'bg-red-600 hover:bg-red-700'
-            }`}
+              }`}
           >
             {loading ? 'Traitement...' : `Marquer comme ${decision}`}
           </button>

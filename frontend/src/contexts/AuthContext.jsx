@@ -23,6 +23,10 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     const { user } = await authService.login(email, password);
+    // Assurer que l'objet user a un champ name pour l'affichage si seulement nom/prenom sont présents
+    if (!user.name && user.nom && user.prenom) {
+      user.name = `${user.prenom} ${user.nom}`;
+    }
     setUser(user);
     return user;
   };

@@ -31,9 +31,12 @@ class AuthController extends Controller
             'token' => $token,
             'user' => [
                 'id' => $user->id,
-                'name' => $user->name,
+                'nom' => $user->nom,
+                'prenom' => $user->prenom,
+                'name' => $user->prenom . ' ' . $user->nom, // Compatibility
                 'email' => $user->email,
-                'role' => $user->role,
+                'roles' => $user->roles->map(fn($role) => ['name' => $role->name]),
+                // 'role' => $user->roles->first()?->name, // Deprecated single role
                 'matricule' => $user->matricule,
                 'filiere_id' => $user->filiere_id
             ]
@@ -49,6 +52,16 @@ class AuthController extends Controller
 
     public function user(Request $request)
     {
-        return response()->json($request->user());
+        $user = $request->user();
+        return response()->json([
+            'id' => $user->id,
+            'nom' => $user->nom,
+            'prenom' => $user->prenom,
+            'name' => $user->prenom . ' ' . $user->nom,
+            'email' => $user->email,
+            'roles' => $user->roles->map(fn($role) => ['name' => $role->name]),
+            'matricule' => $user->matricule,
+            'filiere_id' => $user->filiere_id
+        ]);
     }
 }

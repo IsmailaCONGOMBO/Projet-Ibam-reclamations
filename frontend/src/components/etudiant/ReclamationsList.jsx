@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { reclamationService } from '../../services/reclamationService';
+import StatusBadge from '../common/StatusBadge';
 
 const ReclamationsList = ({ onEdit, onView }) => {
   const [reclamations, setReclamations] = useState([]);
@@ -21,19 +22,7 @@ const ReclamationsList = ({ onEdit, onView }) => {
     }
   };
 
-  const getStatusColor = (statut) => {
-    const colors = {
-      'BROUILLON': 'bg-gray-100 text-gray-800',
-      'SOUMISE': 'bg-blue-100 text-blue-800',
-      'RECEVABLE': 'bg-green-100 text-green-800',
-      'REJETEE': 'bg-red-100 text-red-800',
-      'IMPUTEE_ENSEIGNANT': 'bg-yellow-100 text-yellow-800',
-      'VALIDEE': 'bg-green-100 text-green-800',
-      'INVALIDEE': 'bg-red-100 text-red-800',
-      'TRAITEE_NOTE_CORRIGEE': 'bg-green-100 text-green-800'
-    };
-    return colors[statut] || 'bg-gray-100 text-gray-800';
-  };
+
 
   const handleSoumettre = async (id) => {
     if (confirm('Voulez-vous soumettre cette réclamation ? Elle ne pourra plus être modifiée.')) {
@@ -79,7 +68,7 @@ const ReclamationsList = ({ onEdit, onView }) => {
         </div>
       ) : (
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200" style={{minWidth: '800px'}}>
+          <table className="min-w-full divide-y divide-gray-200" style={{ minWidth: '800px' }}>
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-32">
@@ -109,9 +98,7 @@ const ReclamationsList = ({ onEdit, onView }) => {
                     {reclamation.matiere?.nom_matiere}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(reclamation.statut)}`}>
-                      {reclamation.statut}
-                    </span>
+                    <StatusBadge status={reclamation.status} />
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
                     {new Date(reclamation.created_at).toLocaleDateString()}
@@ -123,7 +110,7 @@ const ReclamationsList = ({ onEdit, onView }) => {
                     >
                       Voir
                     </button>
-                    {reclamation.statut === 'BROUILLON' && (
+                    {reclamation.status === 'BROUILLON' && (
                       <>
                         <button
                           onClick={() => onEdit?.(reclamation)}

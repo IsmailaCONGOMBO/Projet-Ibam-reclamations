@@ -5,6 +5,7 @@ import { reclamationService } from '../services/reclamationService';
 import VerifyReclamationForm from '../components/scolarite/VerifyReclamationForm';
 import FinaliserReclamationForm from '../components/scolarite/FinaliserReclamationForm';
 import ReclamationDetails from '../components/ReclamationDetails';
+import StatusBadge from '../components/common/StatusBadge';
 
 const ScolaritePage = () => {
   const [reclamations, setReclamations] = useState([]);
@@ -24,8 +25,12 @@ const ScolaritePage = () => {
   const loadReclamations = async () => {
     try {
       const data = await reclamationService.getAll();
-      // Afficher toutes les réclamations (historique complet)
-      setReclamations(data);
+      // Le back-end filtre déjà ou on filtre ici. Pour Scolarité:
+      // SOUMIS (à vérifier)
+      // TRANSMIS_SCOLARITE (à finaliser)
+      // TRAITE/REJETE (historique)
+      const visibleStatuses = ['SOUMIS', 'RECEVABLE', 'REJETE', 'EN_TRAITEMENT', 'VALIDE_ENSEIGNANT', 'INVALIDE_ENSEIGNANT', 'TRANSMIS_SCOLARITE', 'TRAITE'];
+      setReclamations(data.filter(r => visibleStatuses.includes(r.status)));
     } catch (err) {
       setError('Erreur lors du chargement');
     } finally {
@@ -45,18 +50,7 @@ const ScolaritePage = () => {
 
   const getFilteredReclamations = () => {
     if (filter === 'ALL') return reclamations;
-    return reclamations.filter(r => r.statut === filter);
-  };
-
-  const getStatusColor = (statut) => {
-    const colors = {
-      'SOUMISE': 'bg-blue-100 text-blue-800',
-      'TRANSMISE_SCOLARITE': 'bg-purple-100 text-purple-800',
-      'RECEVABLE': 'bg-green-100 text-green-800',
-      'REJETEE': 'bg-red-100 text-red-800',
-      'FINALISEE': 'bg-green-100 text-green-800'
-    };
-    return colors[statut] || 'bg-gray-100 text-gray-800';
+    return reclamations.filter(r => r.status === filter);
   };
 
   if (loading) {
@@ -132,15 +126,15 @@ const ScolaritePage = () => {
                   Historique des réclamations ({reclamations.length})
                 </h2>
                 <div className="flex space-x-2">
-                  <select 
-                    value={filter} 
+                  <select
+                    value={filter}
                     onChange={(e) => setFilter(e.target.value)}
                     className="px-3 py-1 border border-gray-300 rounded text-sm"
                   >
                     <option value="ALL">Toutes</option>
-                    <option value="SOUMISE">À vérifier</option>
-                    <option value="TRANSMISE_SCOLARITE">À finaliser</option>
-                    <option value="FINALISEE">Finalisées</option>
+                    <option value="SOUMIS">À vérifier</option>
+                    <option value="TRANSMIS_SCOLARITE">À finaliser</option>
+                    <option value="TRAITE">Finalisées</option>
                   </select>
                 </div>
               </div>
@@ -158,11 +152,11 @@ const ScolaritePage = () => {
               ) : (
                 <div className="bg-white shadow rounded-lg overflow-hidden">
                   <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200" style={{minWidth: '900px'}}>
+                    <table className="min-w-full divide-y divide-gray-200" style={{ minWidth: '900px' }}>
                       <thead className="bg-gray-50">
                         <tr>
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-32">
-                            N° Demande
+                            N°
                           </th>
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-40">
                             Étudiant
@@ -191,9 +185,7 @@ const ScolaritePage = () => {
                               {reclamation.matiere?.nom_matiere}
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap">
-                              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(reclamation.statut)}`}>
-                                {reclamation.statut}
-                              </span>
+                              <StatusBadge status={reclamation.status} />
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap text-sm space-x-2">
                               <button
@@ -203,9 +195,10 @@ const ScolaritePage = () => {
                                 }}
                                 className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded text-sm"
                               >
-                                Voir détails
+                                {reclamation.status === 'TRAITE' ? 'Voir archive' : 'Détails'}
                               </button>
-                              {reclamation.statut === 'SOUMISE' && (
+
+                              {reclamation.status === 'SOUMIS' && (
                                 <button
                                   onClick={() => {
                                     setSelectedReclamation(reclamation);
@@ -217,7 +210,8 @@ const ScolaritePage = () => {
                                   Vérifier
                                 </button>
                               )}
-                              {reclamation.statut === 'TRANSMISE_SCOLARITE' && (
+
+                              {reclamation.status === 'TRANSMIS_SCOLARITE' && (
                                 <button
                                   onClick={() => {
                                     setSelectedReclamation(reclamation);

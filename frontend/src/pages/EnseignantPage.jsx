@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { reclamationService } from '../services/reclamationService';
 import TraiterReclamationForm from '../components/enseignant/TraiterReclamationForm';
 import ReclamationDetails from '../components/ReclamationDetails';
+import StatusBadge from '../components/common/StatusBadge';
 
 const EnseignantPage = () => {
   const [reclamations, setReclamations] = useState([]);
@@ -22,8 +23,12 @@ const EnseignantPage = () => {
   const loadReclamations = async () => {
     try {
       const data = await reclamationService.getAll();
-      // Afficher toutes les réclamations (historique complet)
-      setReclamations(data);
+      // Enseignant voit : 
+      // EN_TRAITEMENT (à traiter)
+      // VALIDE_ENSEIGNANT / INVALIDE_ENSEIGNANT (déjà traité)
+      // TRAITE/TRANSMIS_SCOLARITE (historique)
+      const visibleStatuses = ['EN_TRAITEMENT', 'VALIDE_ENSEIGNANT', 'INVALIDE_ENSEIGNANT', 'TRANSMIS_SCOLARITE', 'TRAITE'];
+      setReclamations(data.filter(r => visibleStatuses.includes(r.status)));
     } catch (err) {
       setError('Erreur lors du chargement');
     } finally {
@@ -43,21 +48,9 @@ const EnseignantPage = () => {
 
   const getFilteredReclamations = () => {
     if (filter === 'ALL') return reclamations;
-    return reclamations.filter(r => r.statut === filter);
-  };
-
-  const getStatusColor = (statut) => {
-    const colors = {
-      'SOUMISE': 'bg-blue-100 text-blue-800',
-      'RECEVABLE': 'bg-green-100 text-green-800',
-      'REJETEE': 'bg-red-100 text-red-800',
-      'IMPUTEE_ENSEIGNANT': 'bg-yellow-100 text-yellow-800',
-      'VALIDEE_ENSEIGNANT': 'bg-green-100 text-green-800',
-      'INVALIDEE_ENSEIGNANT': 'bg-red-100 text-red-800',
-      'TRANSMISE_SCOLARITE': 'bg-purple-100 text-purple-800',
-      'FINALISEE': 'bg-green-100 text-green-800'
-    };
-    return colors[statut] || 'bg-gray-100 text-gray-800';
+    if (filter === 'A_TRAITER') return reclamations.filter(r => r.status === 'EN_TRAITEMENT');
+    if (filter === 'TRAITE') return reclamations.filter(r => ['VALIDE_ENSEIGNANT', 'INVALIDE_ENSEIGNANT'].includes(r.status));
+    return reclamations.filter(r => r.status === filter);
   };
 
   if (loading) {
@@ -66,7 +59,6 @@ const EnseignantPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
@@ -96,7 +88,6 @@ const EnseignantPage = () => {
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           {selectedReclamation && viewingDetails ? (
@@ -117,19 +108,17 @@ const EnseignantPage = () => {
             <div className="space-y-6">
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold text-gray-900">
-                  Mes réclamations ({getFilteredReclamations().length})
+                  Mes réclamations ({reclamations.length})
                 </h2>
                 <div className="flex space-x-2">
-                  <select 
-                    value={filter} 
+                  <select
+                    value={filter}
                     onChange={(e) => setFilter(e.target.value)}
                     className="px-3 py-1 border border-gray-300 rounded text-sm"
                   >
                     <option value="ALL">Toutes</option>
-                    <option value="IMPUTEE_ENSEIGNANT">À traiter</option>
-                    <option value="VALIDEE_ENSEIGNANT">Validées</option>
-                    <option value="INVALIDEE_ENSEIGNANT">Invalidées</option>
-                    <option value="FINALISEE">Finalisées</option>
+                    <option value="A_TRAITER">À traiter</option>
+                    <option value="TRAITE">Traitées</option>
                   </select>
                 </div>
               </div>
@@ -140,14 +129,14 @@ const EnseignantPage = () => {
                 </div>
               )}
 
-              {getFilteredReclamations().length === 0 ? (
+              {reclamations.length === 0 ? (
                 <div className="bg-white p-8 rounded-lg shadow text-center">
                   <p className="text-gray-500">Aucune réclamation trouvée</p>
                 </div>
               ) : (
                 <div className="bg-white shadow rounded-lg overflow-hidden">
                   <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200" style={{minWidth: '900px'}}>
+                    <table className="min-w-full divide-y divide-gray-200" style={{ minWidth: '900px' }}>
                       <thead className="bg-gray-50">
                         <tr>
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-32">
@@ -180,9 +169,7 @@ const EnseignantPage = () => {
                               {reclamation.matiere?.nom_matiere}
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap">
-                              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(reclamation.statut)}`}>
-                                {reclamation.statut}
-                              </span>
+                              <StatusBadge status={reclamation.status} />
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap text-sm space-x-2">
                               <button
@@ -194,7 +181,7 @@ const EnseignantPage = () => {
                               >
                                 Voir détails
                               </button>
-                              {reclamation.statut === 'IMPUTEE_ENSEIGNANT' && (
+                              {reclamation.status === 'EN_TRAITEMENT' && (
                                 <button
                                   onClick={() => {
                                     setSelectedReclamation(reclamation);

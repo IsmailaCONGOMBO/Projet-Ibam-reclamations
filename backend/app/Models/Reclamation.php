@@ -15,7 +15,7 @@ class Reclamation extends Model
         'enseignant_id',
         'objet_demande',
         'motif',
-        'statut',
+        'status',
         'note_actuelle',
         'note_corrigee',
         'commentaire_scolarite',
@@ -33,17 +33,15 @@ class Reclamation extends Model
     ];
 
     const STATUTS = [
-        'BROUILLON',
-        'SOUMISE', 
-        'EN_ATTENTE_VERIFICATION',
-        'RECEVABLE',
-        'REJETEE',
-        'IMPUTEE_ENSEIGNANT',
-        'VALIDEE',
-        'INVALIDEE', 
-        'TRANSMISE_SCOLARITE',
-        'TRAITEE_NOTE_CORRIGEE',
-        'TRAITEE_NON_VALIDEE'
+        'BROUILLON', 
+        'SOUMIS', 
+        'RECEVABLE', 
+        'REJETE', 
+        'EN_TRAITEMENT', 
+        'VALIDE_ENSEIGNANT', 
+        'INVALIDE_ENSEIGNANT', 
+        'TRANSMIS_SCOLARITE',
+        'TRAITE'
     ];
 
     public function etudiant(): BelongsTo

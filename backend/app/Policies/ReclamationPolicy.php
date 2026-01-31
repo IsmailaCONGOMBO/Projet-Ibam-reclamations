@@ -4,54 +4,85 @@ namespace App\Policies;
 
 use App\Models\Reclamation;
 use App\Models\User;
+use Illuminate\Auth\Access\HandlesAuthorization;
 
 class ReclamationPolicy
 {
+    use HandlesAuthorization;
+
     public function viewAny(User $user)
     {
-        return in_array($user->role, ['ETUDIANT', 'SCOLARITE', 'ENSEIGNANT', 'DA']);
+        return $user->hasRole(['ETUDIANT', 'SCOLARITE', 'ENSEIGNANT', 'DA']);
     }
 
     public function view(User $user, Reclamation $reclamation)
     {
-        return match($user->role) {
-            'ETUDIANT' => $reclamation->etudiant_id === $user->id,
-            'ENSEIGNANT' => $reclamation->matiere->filiere_id === $user->filiere_id,
-            'SCOLARITE', 'DA' => true,
-            default => false
-        };
+        if ($user->hasRole(['DA', 'SCOLARITE'])) {
+            return true;
+        }
+
+        if ($user->hasRole('ENSEIGNANT')) {
+            // L'enseignant voit si on lui a imputé ou si c'est sa matière (simplifié)
+            return $reclamation->enseignant_id === $user->id || $reclamation->matiere->enseignants()->where('users.id', $user->id)->exists();
+        }
+
+        return $reclamation->etudiant_id === $user->id;
     }
 
     public function create(User $user)
     {
-        return $user->role === 'ETUDIANT';
+        return $user->hasRole('ETUDIANT');
     }
 
     public function update(User $user, Reclamation $reclamation)
     {
-        return $user->role === 'ETUDIANT' 
+        // Seul l'étudiant modifie le CONTENU, et seulement en brouillon
+        return $user->hasRole('ETUDIANT') 
             && $reclamation->etudiant_id === $user->id 
-            && $reclamation->statut === 'BROUILLON';
+            && $reclamation->status === 'BROUILLON';
     }
 
     public function delete(User $user, Reclamation $reclamation)
     {
-        return $this->update($user, $reclamation);
+        if ($user->hasRole('DA')) {
+            return true;
+        }
+
+        return $user->hasRole('ETUDIANT') 
+            && $reclamation->etudiant_id === $user->id 
+            && $reclamation->status === 'BROUILLON';
     }
 
-    public function verifier(User $user)
+    // Actions Workflow
+
+    public function soumettre(User $user, Reclamation $reclamation)
     {
-        return $user->role === 'SCOLARITE';
+        return $user->hasRole('ETUDIANT') 
+            && $reclamation->etudiant_id === $user->id 
+            && $reclamation->status === 'BROUILLON';
     }
 
-    public function imputer(User $user)
+    public function imputer(User $user, Reclamation $reclamation)
     {
-        return $user->role === 'DA';
+        return $user->hasRole(['DA', 'SCOLARITE']);
     }
 
     public function traiter(User $user, Reclamation $reclamation)
     {
-        return $user->role === 'ENSEIGNANT' 
-            && $reclamation->matiere->filiere_id === $user->filiere_id;
+        // Enseignant assigné ou DA
+        if ($user->hasRole('DA')) return true;
+
+        return $user->hasRole('ENSEIGNANT') 
+            && ($reclamation->enseignant_id === $user->id);
+    }
+
+    public function transmettreScolarite(User $user, Reclamation $reclamation)
+    {
+        return $this->traiter($user, $reclamation);
+    }
+
+    public function finaliser(User $user, Reclamation $reclamation)
+    {
+        return $user->hasRole(['DA', 'SCOLARITE']);
     }
 }

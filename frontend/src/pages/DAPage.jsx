@@ -4,12 +4,15 @@ import { useNavigate } from 'react-router-dom';
 import { reclamationService } from '../services/reclamationService';
 import ReclamationDetails from '../components/ReclamationDetails';
 import TransmettreScolariteForm from '../components/admin/TransmettreScolariteForm';
+import ImputerForm from '../components/admin/ImputerForm'; // Assuming this exists or I will create it
+import StatusBadge from '../components/common/StatusBadge';
 
 const DAPage = () => {
   const [reclamations, setReclamations] = useState([]);
   const [selectedReclamation, setSelectedReclamation] = useState(null);
   const [viewingDetails, setViewingDetails] = useState(false);
   const [transmettingToScolarite, setTransmettingToScolarite] = useState(false);
+  const [imputing, setImputing] = useState(false);
   const [filter, setFilter] = useState('ALL');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -23,7 +26,14 @@ const DAPage = () => {
   const loadReclamations = async () => {
     try {
       const data = await reclamationService.getAll();
-      setReclamations(data);
+      // DA voit :
+      // RECEVABLE (à imputer)
+      // EN_TRAITEMENT (en cours chez prof)
+      // VALIDE_ENSEIGNANT / INVALIDE_ENSEIGNANT (retour prof, à transmettre)
+      // TRANSMIS_SCOLARITE (suivi)
+      // TRAITE (historique)
+      const visibleStatuses = ['RECEVABLE', 'EN_TRAITEMENT', 'VALIDE_ENSEIGNANT', 'INVALIDE_ENSEIGNANT', 'TRANSMIS_SCOLARITE', 'TRAITE'];
+      setReclamations(data.filter(r => visibleStatuses.includes(r.status)));
     } catch (err) {
       setError('Erreur lors du chargement');
     } finally {
@@ -36,54 +46,17 @@ const DAPage = () => {
     navigate('/login');
   };
 
-  const handleImputer = async (reclamationId) => {
-    if (confirm('Voulez-vous imputer cette réclamation à l\'enseignant concerné ?')) {
-      try {
-        await reclamationService.imputer(reclamationId);
-        loadReclamations();
-      } catch (err) {
-        alert('Erreur lors de l\'imputation');
-      }
-    }
-  };
-
-  const getStatusColor = (statut) => {
-    const colors = {
-      'BROUILLON': 'bg-gray-100 text-gray-800',
-      'SOUMISE': 'bg-blue-100 text-blue-800',
-      'RECEVABLE': 'bg-green-100 text-green-800',
-      'REJETEE': 'bg-red-100 text-red-800',
-      'IMPUTEE_ENSEIGNANT': 'bg-yellow-100 text-yellow-800',
-      'VALIDEE_ENSEIGNANT': 'bg-green-100 text-green-800',
-      'INVALIDEE_ENSEIGNANT': 'bg-red-100 text-red-800',
-      'TRANSMISE_SCOLARITE': 'bg-purple-100 text-purple-800',
-      'FINALISEE': 'bg-green-100 text-green-800'
-    };
-    return colors[statut] || 'bg-gray-100 text-gray-800';
-  };
-
   const getFilteredReclamations = () => {
     if (filter === 'ALL') return reclamations;
-    if (filter === 'PENDING') return reclamations.filter(r => r.statut === 'RECEVABLE');
-    if (filter === 'ASSIGNED') return reclamations.filter(r => r.statut === 'IMPUTEE_ENSEIGNANT');
-    if (filter === 'COMPLETED') return reclamations.filter(r => ['VALIDEE', 'INVALIDEE', 'TRAITEE_NOTE_CORRIGEE'].includes(r.statut));
-    return reclamations;
-  };
-
-  const getStats = () => {
-    const total = reclamations.length;
-    const pending = reclamations.filter(r => r.statut === 'RECEVABLE').length;
-    const assigned = reclamations.filter(r => r.statut === 'IMPUTEE_ENSEIGNANT').length;
-    const completed = reclamations.filter(r => ['VALIDEE', 'INVALIDEE', 'TRAITEE_NOTE_CORRIGEE'].includes(r.statut)).length;
-    return { total, pending, assigned, completed };
+    if (filter === 'A_IMPUTER') return reclamations.filter(r => r.status === 'RECEVABLE');
+    if (filter === 'EN_COURS') return reclamations.filter(r => r.status === 'EN_TRAITEMENT');
+    if (filter === 'A_TRANSMETTRE') return reclamations.filter(r => ['VALIDE_ENSEIGNANT', 'INVALIDE_ENSEIGNANT'].includes(r.status));
+    return reclamations.filter(r => r.status === filter);
   };
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">Chargement...</div>;
   }
-
-  const stats = getStats();
-  const filteredReclamations = getFilteredReclamations();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -126,6 +99,21 @@ const DAPage = () => {
                 setViewingDetails(false);
               }}
             />
+          ) : selectedReclamation && imputing ? (
+            // Placeholder for ImputerForm if I need to separate it, or logic here
+            // For now assuming we need a form to select teacher
+            <ImputerForm
+              reclamation={selectedReclamation}
+              onSuccess={() => {
+                setSelectedReclamation(null);
+                setImputing(false);
+                loadReclamations();
+              }}
+              onCancel={() => {
+                setSelectedReclamation(null);
+                setImputing(false);
+              }}
+            />
           ) : selectedReclamation && transmettingToScolarite ? (
             <TransmettreScolariteForm
               reclamation={selectedReclamation}
@@ -139,146 +127,23 @@ const DAPage = () => {
                 setTransmettingToScolarite(false);
               }}
             />
-          ) : selectedReclamation ? (
-            <div className="bg-white p-6 rounded-lg shadow">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">
-                  Détails de la réclamation
-                </h2>
-                <button
-                  onClick={() => setSelectedReclamation(null)}
-                  className="text-gray-600 hover:text-gray-900"
-                >
-                  ← Retour à la liste
-                </button>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="font-medium text-gray-900">N° Demande</h3>
-                  <p className="text-gray-600">{selectedReclamation.numero_demande}</p>
-                </div>
-                <div>
-                  <h3 className="font-medium text-gray-900">Étudiant</h3>
-                  <p className="text-gray-600">{selectedReclamation.etudiant?.name} ({selectedReclamation.etudiant?.matricule})</p>
-                </div>
-                <div>
-                  <h3 className="font-medium text-gray-900">Matière</h3>
-                  <p className="text-gray-600">{selectedReclamation.matiere?.nom_matiere}</p>
-                </div>
-                <div>
-                  <h3 className="font-medium text-gray-900">Enseignant</h3>
-                  <p className="text-gray-600">{selectedReclamation.matiere?.enseignant?.name || 'Non assigné'}</p>
-                </div>
-                <div>
-                  <h3 className="font-medium text-gray-900">Statut</h3>
-                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(selectedReclamation.statut)}`}>
-                    {selectedReclamation.statut}
-                  </span>
-                </div>
-                <div>
-                  <h3 className="font-medium text-gray-900">Date création</h3>
-                  <p className="text-gray-600">{selectedReclamation.created_at}</p>
-                </div>
-                <div className="md:col-span-2">
-                  <h3 className="font-medium text-gray-900">Objet</h3>
-                  <p className="text-gray-600">{selectedReclamation.objet_demande}</p>
-                </div>
-                <div className="md:col-span-2">
-                  <h3 className="font-medium text-gray-900">Motif</h3>
-                  <p className="text-gray-600">{selectedReclamation.motif}</p>
-                </div>
-                {selectedReclamation.commentaire_scolarite && (
-                  <div className="md:col-span-2">
-                    <h3 className="font-medium text-gray-900">Commentaire Scolarité</h3>
-                    <p className="text-gray-600">{selectedReclamation.commentaire_scolarite}</p>
-                  </div>
-                )}
-                {selectedReclamation.decision_enseignant && (
-                  <div className="md:col-span-2">
-                    <h3 className="font-medium text-gray-900">Décision Enseignant</h3>
-                    <p className="text-gray-600">{selectedReclamation.decision_enseignant}</p>
-                  </div>
-                )}
-                {selectedReclamation.note_corrigee && (
-                  <div>
-                    <h3 className="font-medium text-gray-900">Note corrigée</h3>
-                    <p className="text-gray-600">{selectedReclamation.note_corrigee}/20</p>
-                  </div>
-                )}
-              </div>
-
-              {selectedReclamation.statut === 'RECEVABLE' && (
-                <div className="mt-6 pt-6 border-t">
-                  <button
-                    onClick={() => handleImputer(selectedReclamation.id)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md mr-4"
-                  >
-                    Imputer à l'enseignant
-                  </button>
-                </div>
-              )}
-              {(selectedReclamation.statut === 'VALIDEE_ENSEIGNANT' || selectedReclamation.statut === 'INVALIDEE_ENSEIGNANT') && (
-                <div className="mt-6 pt-6 border-t">
-                  <button
-                    onClick={() => setTransmettingToScolarite(true)}
-                    className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md"
-                  >
-                    Transmettre à la Scolarité
-                  </button>
-                </div>
-              )}
-            </div>
           ) : (
             <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="bg-white p-6 rounded-lg shadow">
-                  <h3 className="text-lg font-medium text-gray-900">Total</h3>
-                  <p className="text-3xl font-bold text-blue-600">{stats.total}</p>
-                </div>
-                <div className="bg-white p-6 rounded-lg shadow">
-                  <h3 className="text-lg font-medium text-gray-900">À imputer</h3>
-                  <p className="text-3xl font-bold text-green-600">{stats.pending}</p>
-                </div>
-                <div className="bg-white p-6 rounded-lg shadow">
-                  <h3 className="text-lg font-medium text-gray-900">En cours</h3>
-                  <p className="text-3xl font-bold text-yellow-600">{stats.assigned}</p>
-                </div>
-                <div className="bg-white p-6 rounded-lg shadow">
-                  <h3 className="text-lg font-medium text-gray-900">Terminées</h3>
-                  <p className="text-3xl font-bold text-gray-600">{stats.completed}</p>
-                </div>
-              </div>
-
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold text-gray-900">
-                  Toutes les réclamations ({filteredReclamations.length})
+                  Toutes les réclamations ({reclamations.length})
                 </h2>
                 <div className="flex space-x-2">
-                  <button
-                    onClick={() => setFilter('ALL')}
-                    className={`px-3 py-1 rounded text-sm ${filter === 'ALL' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+                  <select
+                    value={filter}
+                    onChange={(e) => setFilter(e.target.value)}
+                    className="px-3 py-1 border border-gray-300 rounded text-sm"
                   >
-                    Toutes
-                  </button>
-                  <button
-                    onClick={() => setFilter('PENDING')}
-                    className={`px-3 py-1 rounded text-sm ${filter === 'PENDING' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
-                  >
-                    À imputer
-                  </button>
-                  <button
-                    onClick={() => setFilter('ASSIGNED')}
-                    className={`px-3 py-1 rounded text-sm ${filter === 'ASSIGNED' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
-                  >
-                    En cours
-                  </button>
-                  <button
-                    onClick={() => setFilter('COMPLETED')}
-                    className={`px-3 py-1 rounded text-sm ${filter === 'COMPLETED' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
-                  >
-                    Terminées
-                  </button>
+                    <option value="ALL">Toutes</option>
+                    <option value="A_IMPUTER">À imputer</option>
+                    <option value="EN_COURS">En traitement</option>
+                    <option value="A_TRANSMETTRE">À transmettre</option>
+                  </select>
                 </div>
               </div>
 
@@ -290,7 +155,7 @@ const DAPage = () => {
 
               <div className="bg-white shadow rounded-lg overflow-hidden">
                 <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200" style={{minWidth: '1000px'}}>
+                  <table className="min-w-full divide-y divide-gray-200" style={{ minWidth: '1000px' }}>
                     <thead className="bg-gray-50">
                       <tr>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-32">
@@ -314,7 +179,7 @@ const DAPage = () => {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {filteredReclamations.map((reclamation) => (
+                      {getFilteredReclamations().map((reclamation) => (
                         <tr key={reclamation.id} className="hover:bg-gray-50">
                           <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
                             {reclamation.numero_demande}
@@ -326,9 +191,7 @@ const DAPage = () => {
                             {reclamation.matiere?.nom_matiere}
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap">
-                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(reclamation.statut)}`}>
-                              {reclamation.statut}
-                            </span>
+                            <StatusBadge status={reclamation.status} />
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
                             {new Date(reclamation.created_at).toLocaleDateString()}
@@ -341,23 +204,26 @@ const DAPage = () => {
                               }}
                               className="text-blue-600 hover:text-blue-900"
                             >
-                              Voir détails
+                              Détails
                             </button>
-                            {reclamation.statut === 'RECEVABLE' && (
+                            {reclamation.status === 'RECEVABLE' && (
                               <button
-                                onClick={() => handleImputer(reclamation.id)}
-                                className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm"
+                                onClick={() => {
+                                  setSelectedReclamation(reclamation);
+                                  setImputing(true);
+                                }}
+                                className="text-green-600 hover:text-green-900"
                               >
                                 Imputer
                               </button>
                             )}
-                            {(reclamation.statut === 'VALIDEE_ENSEIGNANT' || reclamation.statut === 'INVALIDEE_ENSEIGNANT') && (
+                            {(reclamation.status === 'VALIDE_ENSEIGNANT' || reclamation.status === 'INVALIDE_ENSEIGNANT') && (
                               <button
                                 onClick={() => {
                                   setSelectedReclamation(reclamation);
                                   setTransmettingToScolarite(true);
                                 }}
-                                className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded text-sm"
+                                className="text-purple-600 hover:text-purple-900"
                               >
                                 Transmettre
                               </button>
