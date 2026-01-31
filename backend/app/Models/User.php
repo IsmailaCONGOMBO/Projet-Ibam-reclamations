@@ -14,6 +14,18 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable, HasApiTokens, HasRoles;
 
+    protected static function booted()
+    {
+        static::creating(function ($user) {
+            if (empty($user->matricule)) {
+                // Generates MAT-YYYY-XXXX (e.g. MAT-2026-0005)
+                // Use max ID + 1. Note: This is not concurrency safe but standard for simple apps.
+                $nextId = (User::max('id') ?? 0) + 1;
+                $user->matricule = 'MAT-' . date('Y') . '-' . str_pad($nextId, 5, '0', STR_PAD_LEFT);
+            }
+        });
+    }
+
     protected $fillable = [
         'nom',
         'prenom',

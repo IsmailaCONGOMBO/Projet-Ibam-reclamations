@@ -8,6 +8,15 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Reclamation extends Model
 {
+    protected static function booted()
+    {
+        static::creating(function ($reclamation) {
+            if (empty($reclamation->numero_demande)) {
+                $nextId = (Reclamation::max('id') ?? 0) + 1;
+                $reclamation->numero_demande = 'REC-' . date('Y') . '-' . str_pad($nextId, 5, '0', STR_PAD_LEFT);
+            }
+        });
+    }
     protected $fillable = [
         'numero_demande',
         'etudiant_id',

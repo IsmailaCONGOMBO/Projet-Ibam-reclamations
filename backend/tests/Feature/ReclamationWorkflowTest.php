@@ -41,9 +41,11 @@ class ReclamationWorkflowTest extends TestCase
             'filiere_id' => $filiere->id
         ]);
         $etudiant->assignRole('ETUDIANT');
+        $this->assertNotNull($etudiant->matricule);
+        $this->assertStringStartsWith('MAT-', $etudiant->matricule);
 
         $da = User::factory()->create(['role' => 'DA', 'email' => 'da_test_'.uniqid().'@univ.sn']);
-        $da->assignRole('DA');
+        $da->assignRole('DA'); // Also check matricule? Optional.
 
         $enseignant = User::factory()->create(['role' => 'ENSEIGNANT', 'email' => 'prof_test_'.uniqid().'@univ.sn']);
         $enseignant->assignRole('ENSEIGNANT');
@@ -69,6 +71,8 @@ class ReclamationWorkflowTest extends TestCase
         
         // Refresh model
         $reclamation = Reclamation::find($reclamationId);
+        $this->assertNotNull($reclamation->numero_demande);
+        $this->assertStringStartsWith('REC-', $reclamation->numero_demande);
         $this->assertEquals('BROUILLON', $reclamation->status); // OR SOUMIS depends on implementation
         
         // If workflow requires explicit "Soumettre" call:
