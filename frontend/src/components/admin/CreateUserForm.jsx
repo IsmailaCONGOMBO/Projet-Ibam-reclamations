@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import api from '../../services/api';
 
 const CreateUserForm = ({ onSuccess, onCancel }) => {
   const [formData, setFormData] = useState({
@@ -9,7 +10,9 @@ const CreateUserForm = ({ onSuccess, onCancel }) => {
     filiere_id: '',
     telephone: '',
     niveau: '',
-    matiere_ids: []
+    matiere_ids: [],
+    password: '',
+    password_confirmation: ''
   });
   const [filieres, setFilieres] = useState([]);
   const [matieres, setMatieres] = useState([]);
@@ -28,11 +31,8 @@ const CreateUserForm = ({ onSuccess, onCancel }) => {
 
   const loadMatieresByFiliere = async (filiereId) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/filieres/${filiereId}/matieres`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-      });
-      const data = await response.json();
-      setMatieres(data.filter(m => !m.enseignant_id));
+      const response = await api.get(`/filieres/${filiereId}/matieres`);
+      setMatieres(response.data.filter(m => !m.enseignant_id));
     } catch (err) {
       console.error('Erreur lors du chargement des matières');
     }
@@ -40,14 +40,8 @@ const CreateUserForm = ({ onSuccess, onCancel }) => {
 
   const loadFilieres = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/filieres', {
-        headers: { 
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Accept': 'application/json'
-        }
-      });
-      const data = await response.json();
-      setFilieres(data);
+      const response = await api.get('/filieres');
+      setFilieres(response.data);
     } catch (err) {
       setError('Erreur lors du chargement des filières');
     }
@@ -59,23 +53,12 @@ const CreateUserForm = ({ onSuccess, onCancel }) => {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:8000/api/users', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify(formData)
-      });
-
-      if (response.ok) {
-        onSuccess?.();
-      } else {
-        const errorData = await response.json();
-        setError(errorData.message || 'Erreur lors de la création');
-      }
+      await api.post('/users', formData);
+      onSuccess?.();
     } catch (err) {
-      setError('Erreur de connexion');
+      // Axios stores response error in err.response
+      const message = err.response?.data?.message || 'Erreur lors de la création';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -215,9 +198,9 @@ const CreateUserForm = ({ onSuccess, onCancel }) => {
                     checked={formData.matiere_ids.includes(matiere.id)}
                     onChange={(e) => {
                       if (e.target.checked) {
-                        setFormData({...formData, matiere_ids: [...formData.matiere_ids, matiere.id]});
+                        setFormData({ ...formData, matiere_ids: [...formData.matiere_ids, matiere.id] });
                       } else {
-                        setFormData({...formData, matiere_ids: formData.matiere_ids.filter(id => id !== matiere.id)});
+                        setFormData({ ...formData, matiere_ids: formData.matiere_ids.filter(id => id !== matiere.id) });
                       }
                     }}
                     className="mr-2"
@@ -243,6 +226,35 @@ const CreateUserForm = ({ onSuccess, onCancel }) => {
             onChange={handleChange}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Mot de passe *
+            </label>
+            <input
+              type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Confirmer Mot de passe *
+            </label>
+            <input
+              type="password"
+              name="password_confirmation"
+              value={formData.password_confirmation}
+              onChange={handleChange}
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
         </div>
 
         <div className="flex justify-end space-x-4 pt-4">

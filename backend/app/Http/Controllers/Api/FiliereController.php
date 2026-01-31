@@ -33,4 +33,21 @@ class FiliereController extends Controller
     {
         return response()->json($filiere->enseignants()->get());
     }
+
+    public function update(Request $request, Filiere $filiere)
+    {
+        $request->validate([
+            'code_filiere' => 'required|string|unique:filieres,code_filiere,' . $filiere->id,
+            'nom_filiere' => 'required|string'
+        ]);
+
+        $filiere->update($request->all());
+        return response()->json($filiere);
+    }
+
+    public function destroy(Filiere $filiere)
+    {
+        $filiere->delete();
+        return response()->json(['message' => 'Filière supprimée']);
+    }
 }

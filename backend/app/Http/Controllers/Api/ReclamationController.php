@@ -54,7 +54,13 @@ class ReclamationController extends Controller
             'message' => 'required|string',
             'type' => 'required|string',
             'matiere_id' => 'required|exists:matieres,id',
+            'piece_jointe' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120', // Obligatoire, PDF/Image, max 5MB
         ]);
+
+        $path = null;
+        if ($request->hasFile('piece_jointe')) {
+            $path = $request->file('piece_jointe')->store('justificatifs', 'public');
+        }
 
         $reclamation = Reclamation::create([
             'objet' => $request->objet,
@@ -63,6 +69,7 @@ class ReclamationController extends Controller
             'status' => 'BROUILLON', // Par défaut
             'etudiant_id' => Auth::id(),
             'matiere_id' => $request->matiere_id,
+            'piece_jointe' => $path,
         ]);
 
         return response()->json($reclamation, 201);
@@ -183,6 +190,14 @@ class ReclamationController extends Controller
             'commentaire_scolarite' => $request->commentaire,
             'date_validation' => now(),
         ]);
+
+        // Envoyer email à l'étudiant
+        try {
+            \Illuminate\Support\Facades\Mail::to($reclamation->etudiant->email)->send(new \App\Mail\ReclamationTraitee($reclamation));
+        } catch (\Exception $e) {
+            // Log error but don't fail request
+             \Illuminate\Support\Facades\Log::error('Erreur envoi mail: ' . $e->getMessage());
+        }
 
         return response()->json($reclamation);
     }

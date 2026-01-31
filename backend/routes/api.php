@@ -34,15 +34,12 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     
     // Filières
-    Route::get('/filieres', [FiliereController::class, 'index']);
-    Route::post('/filieres', [FiliereController::class, 'store'])->middleware('role:DA');
     Route::get('/filieres/{filiere}/matieres', [FiliereController::class, 'getMatieres']);
     Route::get('/filieres/{filiere}/enseignants', [FiliereController::class, 'getEnseignants']);
+    Route::apiResource('filieres', FiliereController::class);
     
     // Matières
-    Route::get('/matieres', [MatiereController::class, 'index']);
-    Route::post('/matieres', [MatiereController::class, 'store'])->middleware('role:DA');
-    Route::get('/matieres/{matiere}', [MatiereController::class, 'show']);
+    Route::apiResource('matieres', MatiereController::class);
     
     // Réclamations
     Route::apiResource('reclamations', ReclamationController::class);

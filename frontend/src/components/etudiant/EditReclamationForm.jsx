@@ -23,10 +23,22 @@ export default function EditReclamationForm({ reclamation, onSuccess }) {
 
     const onSubmit = async (data) => {
         try {
+            const formData = new FormData();
+            formData.append('objet', data.objet);
+            formData.append('message', data.message);
+            formData.append('type', data.type);
+            formData.append('matiere_id', data.matiere_id);
+
+            // Gestion du fichier uniquement en création pour l'instant (simplification)
+            if (!reclamation && data.piece_jointe[0]) {
+                formData.append('piece_jointe', data.piece_jointe[0]);
+            }
+
             if (reclamation) {
+                // Update logic... (si on veut gérer l'update de fichier plus tard)
                 await reclamationService.update(reclamation.id, data);
             } else {
-                await reclamationService.create(data);
+                await reclamationService.create(formData);
             }
             onSuccess();
         } catch (error) {
@@ -36,7 +48,7 @@ export default function EditReclamationForm({ reclamation, onSuccess }) {
     };
 
     return (
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 bg-white p-6 rounded shadow">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 bg-white p-6 rounded shadow" encType="multipart/form-data">
             <div>
                 <label className="block text-sm font-medium text-gray-700">Matière</label>
                 <select
@@ -45,7 +57,7 @@ export default function EditReclamationForm({ reclamation, onSuccess }) {
                 >
                     <option value="">Sélectionner une matière</option>
                     {matieres.map(m => (
-                        <option key={m.id} value={m.id}>{m.nom} ({m.code})</option>
+                        <option key={m.id} value={m.id}>{m.nom_matiere} ({m.code_matiere})</option>
                     ))}
                 </select>
                 {errors.matiere_id && <span className="text-red-500 text-sm">{errors.matiere_id.message}</span>}
@@ -83,6 +95,26 @@ export default function EditReclamationForm({ reclamation, onSuccess }) {
                 />
                 {errors.message && <span className="text-red-500 text-sm">{errors.message.message}</span>}
             </div>
+
+            {!reclamation && (
+                <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                        Justificatif (PDF ou Image, obligatoire)
+                    </label>
+                    <input
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        {...register('piece_jointe', { required: 'Le justificatif est obligatoire' })}
+                        className="mt-1 block w-full text-sm text-gray-500
+                            file:mr-4 file:py-2 file:px-4
+                            file:rounded-full file:border-0
+                            file:text-sm file:font-semibold
+                            file:bg-indigo-50 file:text-indigo-700
+                            hover:file:bg-indigo-100"
+                    />
+                    {errors.piece_jointe && <span className="text-red-500 text-sm">{errors.piece_jointe.message}</span>}
+                </div>
+            )}
 
             <div className="flex justify-end pt-4">
                 <button

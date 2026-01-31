@@ -59,186 +59,158 @@ const DAPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                IBAM - Directeur Adjoint
-              </h1>
-              <p className="text-sm text-gray-600">
-                Administration des réclamations - {user.name}
-              </p>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Administration des réclamations</h1>
+          <p className="text-sm text-gray-500">Bienvenue, {user.name}</p>
+        </div>
+      </div>
+
+      <div className="bg-white shadow rounded-lg p-6">
+        {selectedReclamation && viewingDetails ? (
+          <ReclamationDetails
+            reclamationId={selectedReclamation.id}
+            onClose={() => {
+              setSelectedReclamation(null);
+              setViewingDetails(false);
+            }}
+          />
+        ) : selectedReclamation && imputing ? (
+          <ImputerForm
+            reclamation={selectedReclamation}
+            onSuccess={() => {
+              setSelectedReclamation(null);
+              setImputing(false);
+              loadReclamations();
+            }}
+            onCancel={() => {
+              setSelectedReclamation(null);
+              setImputing(false);
+            }}
+          />
+        ) : selectedReclamation && transmettingToScolarite ? (
+          <TransmettreScolariteForm
+            reclamation={selectedReclamation}
+            onSuccess={() => {
+              setSelectedReclamation(null);
+              setTransmettingToScolarite(false);
+              loadReclamations();
+            }}
+            onCancel={() => {
+              setSelectedReclamation(null);
+              setTransmettingToScolarite(false);
+            }}
+          />
+        ) : (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-semibold text-gray-900">
+                Toutes les réclamations ({reclamations.length})
+              </h2>
+              <div className="flex space-x-2">
+                <select
+                  value={filter}
+                  onChange={(e) => setFilter(e.target.value)}
+                  className="px-3 py-1 border border-gray-300 rounded text-sm focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="ALL">Toutes</option>
+                  <option value="A_IMPUTER">À imputer</option>
+                  <option value="EN_COURS">En traitement</option>
+                  <option value="A_TRANSMETTRE">À transmettre</option>
+                </select>
+              </div>
             </div>
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => navigate('/dashboard')}
-                className="text-gray-600 hover:text-gray-900"
-              >
-                Tableau de bord
-              </button>
-              <button
-                onClick={handleLogout}
-                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium"
-              >
-                Déconnexion
-              </button>
+
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                {error}
+              </div>
+            )}
+
+            <div className="overflow-hidden border border-gray-200 rounded-lg">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      N° Demande
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Étudiant
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Matière
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Statut
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Date
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {getFilteredReclamations().map((reclamation) => (
+                    <tr key={reclamation.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {reclamation.numero_demande}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {reclamation.etudiant?.name}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {reclamation.matiere?.nom_matiere}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <StatusBadge status={reclamation.status} />
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {new Date(reclamation.created_at).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
+                        <button
+                          onClick={() => {
+                            setSelectedReclamation(reclamation);
+                            setViewingDetails(true);
+                          }}
+                          className="text-blue-600 hover:text-blue-900"
+                        >
+                          Détails
+                        </button>
+                        {reclamation.status === 'RECEVABLE' && (
+                          <button
+                            onClick={() => {
+                              setSelectedReclamation(reclamation);
+                              setImputing(true);
+                            }}
+                            className="text-green-600 hover:text-green-900 font-semibold"
+                          >
+                            Imputer
+                          </button>
+                        )}
+                        {(reclamation.status === 'VALIDE_ENSEIGNANT' || reclamation.status === 'INVALIDE_ENSEIGNANT') && (
+                          <button
+                            onClick={() => {
+                              setSelectedReclamation(reclamation);
+                              setTransmettingToScolarite(true);
+                            }}
+                            className="text-purple-600 hover:text-purple-900 font-semibold"
+                          >
+                            Transmettre
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          {selectedReclamation && viewingDetails ? (
-            <ReclamationDetails
-              reclamationId={selectedReclamation.id}
-              onClose={() => {
-                setSelectedReclamation(null);
-                setViewingDetails(false);
-              }}
-            />
-          ) : selectedReclamation && imputing ? (
-            // Placeholder for ImputerForm if I need to separate it, or logic here
-            // For now assuming we need a form to select teacher
-            <ImputerForm
-              reclamation={selectedReclamation}
-              onSuccess={() => {
-                setSelectedReclamation(null);
-                setImputing(false);
-                loadReclamations();
-              }}
-              onCancel={() => {
-                setSelectedReclamation(null);
-                setImputing(false);
-              }}
-            />
-          ) : selectedReclamation && transmettingToScolarite ? (
-            <TransmettreScolariteForm
-              reclamation={selectedReclamation}
-              onSuccess={() => {
-                setSelectedReclamation(null);
-                setTransmettingToScolarite(false);
-                loadReclamations();
-              }}
-              onCancel={() => {
-                setSelectedReclamation(null);
-                setTransmettingToScolarite(false);
-              }}
-            />
-          ) : (
-            <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-gray-900">
-                  Toutes les réclamations ({reclamations.length})
-                </h2>
-                <div className="flex space-x-2">
-                  <select
-                    value={filter}
-                    onChange={(e) => setFilter(e.target.value)}
-                    className="px-3 py-1 border border-gray-300 rounded text-sm"
-                  >
-                    <option value="ALL">Toutes</option>
-                    <option value="A_IMPUTER">À imputer</option>
-                    <option value="EN_COURS">En traitement</option>
-                    <option value="A_TRANSMETTRE">À transmettre</option>
-                  </select>
-                </div>
-              </div>
-
-              {error && (
-                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-                  {error}
-                </div>
-              )}
-
-              <div className="bg-white shadow rounded-lg overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200" style={{ minWidth: '1000px' }}>
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-32">
-                          N° Demande
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-40">
-                          Étudiant
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-40">
-                          Matière
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-32">
-                          Statut
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-28">
-                          Date
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-48">
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {getFilteredReclamations().map((reclamation) => (
-                        <tr key={reclamation.id} className="hover:bg-gray-50">
-                          <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {reclamation.numero_demande}
-                          </td>
-                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                            {reclamation.etudiant?.name}
-                          </td>
-                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                            {reclamation.matiere?.nom_matiere}
-                          </td>
-                          <td className="px-4 py-3 whitespace-nowrap">
-                            <StatusBadge status={reclamation.status} />
-                          </td>
-                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                            {new Date(reclamation.created_at).toLocaleDateString()}
-                          </td>
-                          <td className="px-4 py-3 whitespace-nowrap text-sm space-x-2">
-                            <button
-                              onClick={() => {
-                                setSelectedReclamation(reclamation);
-                                setViewingDetails(true);
-                              }}
-                              className="text-blue-600 hover:text-blue-900"
-                            >
-                              Détails
-                            </button>
-                            {reclamation.status === 'RECEVABLE' && (
-                              <button
-                                onClick={() => {
-                                  setSelectedReclamation(reclamation);
-                                  setImputing(true);
-                                }}
-                                className="text-green-600 hover:text-green-900"
-                              >
-                                Imputer
-                              </button>
-                            )}
-                            {(reclamation.status === 'VALIDE_ENSEIGNANT' || reclamation.status === 'INVALIDE_ENSEIGNANT') && (
-                              <button
-                                onClick={() => {
-                                  setSelectedReclamation(reclamation);
-                                  setTransmettingToScolarite(true);
-                                }}
-                                className="text-purple-600 hover:text-purple-900"
-                              >
-                                Transmettre
-                              </button>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </main>
+        )}
+      </div>
     </div>
   );
 };

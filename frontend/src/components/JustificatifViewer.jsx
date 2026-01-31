@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import api from '../services/api'; // Assuming 'api' is an Axios instance configured with base URL and interceptors
 
 const JustificatifViewer = ({ justificatifs }) => {
   const [downloading, setDownloading] = useState(null);
@@ -6,21 +7,20 @@ const JustificatifViewer = ({ justificatifs }) => {
   const handleDownload = async (justificatif) => {
     setDownloading(justificatif.id);
     try {
-      const response = await fetch(`http://localhost:8000/api/justificatifs/${justificatif.id}/download`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      const response = await api.get(`/justificatifs/${justificatif.id}/download`, {
+        responseType: 'blob' // Important for downloading files
       });
-      
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = justificatif.nom_fichier;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-      }
+
+      // Assuming response.data is the blob when responseType is 'blob'
+      const blob = response.data;
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = justificatif.nom_fichier;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
     } catch (error) {
       console.error('Erreur téléchargement:', error);
     } finally {

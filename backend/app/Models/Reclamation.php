@@ -15,6 +15,7 @@ class Reclamation extends Model
         'enseignant_id',
         'objet_demande',
         'motif',
+        'piece_jointe',
         'status',
         'note_actuelle',
         'note_corrigee',
