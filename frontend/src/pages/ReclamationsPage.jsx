@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import ReclamationsList from '../components/etudiant/ReclamationsList';
 import EditReclamationForm from '../components/etudiant/EditReclamationForm';
+import ReclamationDetails from '../components/ReclamationDetails';
 import { useSearchParams } from 'react-router-dom';
 import StatusBadge from '../components/common/StatusBadge';
 
@@ -41,6 +42,10 @@ const ReclamationsPage = () => {
                         setSelectedReclamation(reclamation);
                         setView('edit');
                     }}
+                    onView={(reclamation) => {
+                        setSelectedReclamation(reclamation);
+                        setView('details');
+                    }}
                 />
             )}
 
@@ -62,6 +67,16 @@ const ReclamationsPage = () => {
                         }}
                     />
                 </div>
+            )}
+
+            {view === 'details' && selectedReclamation && (
+                <ReclamationDetails
+                    reclamationId={selectedReclamation.id}
+                    onClose={() => {
+                        setView('list');
+                        setSelectedReclamation(null);
+                    }}
+                />
             )}
         </div>
     );
