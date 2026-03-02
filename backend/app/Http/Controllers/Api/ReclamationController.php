@@ -233,4 +233,26 @@ class ReclamationController extends Controller
             ->header('Content-Type', $mimeType)
             ->header('Content-Disposition', 'inline; filename="' . $fileName . '"');
     }
+
+    public function downloadByFilename($filename)
+    {
+        $path = 'justificatifs/' . $filename;
+        
+        if (!Storage::disk('public')->exists($path)) {
+            return response()->json(['message' => 'Fichier introuvable'], 404);
+        }
+
+        // Vérifier que l'utilisateur a accès à au moins une réclamation avec ce fichier
+        $reclamation = Reclamation::where('piece_jointe', $path)->first();
+        if ($reclamation) {
+            $this->authorize('view', $reclamation);
+        }
+
+        $file = Storage::disk('public')->get($path);
+        $mimeType = Storage::disk('public')->mimeType($path);
+
+        return response($file, 200)
+            ->header('Content-Type', $mimeType)
+            ->header('Content-Disposition', 'inline; filename="' . $filename . '"');
+    }
 }
