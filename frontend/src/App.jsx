@@ -1,6 +1,8 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import ErrorBoundary from './components/ErrorBoundary';
+import Home from './pages/Home';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import ReclamationsPage from './pages/ReclamationsPage';
@@ -16,9 +18,11 @@ import AdminStudentsPage from './pages/AdminStudentsPage';
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
+    <ErrorBoundary>
+      <AuthProvider>
+        <Router>
         <Routes>
+          <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
 
           {/* Routes protégées avec Layout */}
@@ -105,21 +109,11 @@ function App() {
             />
           </Route>
 
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route
-            path="/unauthorized"
-            element={
-              <div className="min-h-screen flex items-center justify-center">
-                <div className="text-center">
-                  <h1 className="text-2xl font-bold text-red-600">Accès non autorisé</h1>
-                  <p className="mt-2 text-gray-600">Vous n'avez pas les permissions nécessaires.</p>
-                </div>
-              </div>
-            }
-          />
+          <Route path="/dashboard" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </Router>
     </AuthProvider>
+    </ErrorBoundary>
   );
 }
 

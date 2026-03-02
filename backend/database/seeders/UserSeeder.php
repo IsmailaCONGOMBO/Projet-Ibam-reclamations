@@ -26,6 +26,32 @@ class UserSeeder extends Seeder
         );
         $etudiant->assignRole('ETUDIANT');
 
+        // Etudiant 2 - Mama Diawara
+        $etudiant2 = User::firstOrCreate(
+            ['email' => 'mamadiawara1962@gmail.com'],
+            [
+                'nom' => 'Diawara',
+                'prenom' => 'Mama',
+                'matricule' => 'ET2024002',
+                'password' => $password,
+                'role' => 'ETUDIANT'
+            ]
+        );
+        $etudiant2->assignRole('ETUDIANT');
+
+        // Etudiant 3 - Sommaila Congombo
+        $etudiant3 = User::firstOrCreate(
+            ['email' => 'sommailacongombo@gmail.com'],
+            [
+                'nom' => 'Congombo',
+                'prenom' => 'Sommaila',
+                'matricule' => 'ET2024003',
+                'password' => $password,
+                'role' => 'ETUDIANT'
+            ]
+        );
+        $etudiant3->assignRole('ETUDIANT');
+
         // 2. Enseignant
         $enseignant = User::firstOrCreate(
             ['email' => 'enseignant@ibam.bf'],
