@@ -5,7 +5,7 @@ from selenium.webdriver.support import expected_conditions as EC
 import time
 
 print("=" * 60)
-print("🚀 TEST DE FUMÉE - VALIDATION NOUVELLE NOTE (0-20)")
+print(" TEST DE FUMÉE - VALIDATION NOUVELLE NOTE (0-20)")
 print("=" * 60)
 
 driver = webdriver.Chrome()
@@ -13,7 +13,7 @@ driver.maximize_window()
 
 try:
     # 1. Connexion enseignant
-    print("\n1️⃣ Connexion enseignant...")
+    print("\n 1️ Connexion enseignant...")
     driver.get("http://localhost:5173")
     email_input = WebDriverWait(driver, 10).until(
         EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='email']"))
@@ -31,7 +31,7 @@ try:
     print("   ✓ Connexion réussie")
     
     # 2. Aller sur "Réclamations à traiter"
-    print("\n2️⃣ Navigation vers 'Réclamations à traiter'...")
+    print("\n 2️ Navigation vers 'Réclamations à traiter'...")
     time.sleep(2)
     try:
         reclamations_link = WebDriverWait(driver, 10).until(
@@ -46,37 +46,37 @@ try:
                 break
     
     time.sleep(2)
-    print("   ✓ Page ouverte")
+    print("    Page ouverte")
     
     # 3. Cliquer sur "Traiter"
-    print("\n3️⃣ Ouverture du formulaire de traitement...")
+    print("\n 3️ Ouverture du formulaire de traitement...")
     traiter_button = WebDriverWait(driver, 10).until(
         EC.element_to_be_clickable((By.XPATH, "(//button[contains(., 'Traiter')])[1]"))
     )
     traiter_button.click()
     time.sleep(2)
-    print("   ✓ Formulaire ouvert")
+    print("    Formulaire ouvert")
     
-    # 4. Remplir le commentaire
-    print("\n4️⃣ Remplissage du commentaire...")
+    
+    print("\n 4️ Remplissage du commentaire...")
     try:
         commentaire = driver.find_element(By.CSS_SELECTOR, "textarea")
         commentaire.send_keys("Test de validation des notes")
-        print("   ✓ Commentaire rempli")
+        print("    Commentaire rempli")
     except:
-        print("   ⚠️ Commentaire non trouvé")
+        print("    Commentaire non trouvé")
     
-    # 5. Cocher "Valider la réclamation (Correction note)"
-    print("\n5️⃣ Sélection de la décision 'Correction note'...")
+    
+    print("\n 5️ Sélection de la décision 'Correction note'...")
     correction_radio = WebDriverWait(driver, 10).until(
         EC.element_to_be_clickable((By.XPATH, "//label[contains(., 'Valider') and contains(., 'Correction')]//input | //input[@value='validee']"))
     )
     driver.execute_script("arguments[0].click();", correction_radio)
     time.sleep(1)
-    print("   ✓ Décision cochée")
+    print("    Décision cochée")
     
-    # 6. Trouver le champ "Nouvelle note"
-    print("\n6️⃣ Recherche du champ 'Nouvelle note'...")
+    
+    print("\n 6️ Recherche du champ 'Nouvelle note'...")
     note_input = None
     try:
         note_input = driver.find_element(By.XPATH, "//label[contains(., 'Nouvelle note')]/following::input[1]")
@@ -92,14 +92,14 @@ try:
                     note_input = inputs[-1]
     
     if not note_input:
-        print("   ❌ Champ 'Nouvelle note' non trouvé")
+        print("    Champ 'Nouvelle note' non trouvé")
         driver.quit()
         exit()
     
-    print("   ✓ Champ trouvé")
+    print("    Champ trouvé")
     
     # 7. Tester les différentes valeurs
-    print("\n7️⃣ Tests de validation...")
+    print("\n 7️ Tests de validation...")
     print("=" * 60)
     
     tests = [
@@ -125,31 +125,31 @@ try:
         
         if should_pass:
             success = is_valid
-            status = "✅" if success else "❌"
+            status = "" if success else ""
         else:
             success = not is_valid
-            status = "✅" if success else "❌"
+            status = "" if success else ""
         
         resultats.append((note_value, should_pass, success))
         print(f"{status} Note {note_value:>6} - {description}")
     
     # Résumé
     print("\n" + "=" * 60)
-    print("📊 RÉSUMÉ")
+    print(" RÉSUMÉ")
     print("=" * 60)
     total = len(resultats)
     passes = sum(1 for _, _, s in resultats if s)
     print(f"Total: {passes}/{total} tests réussis")
     print("=" * 60)
     
-    print("\n⏸️ Pause de 3 secondes...")
+    print("\n Pause de 3 secondes...")
     time.sleep(3)
     
 except Exception as e:
-    print(f"\n❌ ERREUR: {e}")
+    print(f"\n ERREUR: {e}")
     import traceback
     traceback.print_exc()
 
 finally:
     driver.quit()
-    print("\n✅ Test terminé")
+    print("\n Test terminé")

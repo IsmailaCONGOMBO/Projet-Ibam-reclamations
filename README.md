@@ -2,12 +2,12 @@
 
 Système de dématérialisation des demandes de réclamation de notes pour l'Institut Burkinabè des Arts et Métiers.
 
-## 🏗️ Architecture
+##  Architecture
 - **Frontend** : React 18 + Vite + Tailwind CSS
 - **Backend** : Laravel 12 API + Sanctum
 - **Base de données** : MySQL 8.0+
 
-## 🚀 Installation Rapide
+##  Installation Rapide
 
 ### Prérequis
 - PHP 8.2+
@@ -33,11 +33,11 @@ npm install
 npm run dev
 ```
 
-## 👥 Comptes de Test
+##  Comptes de Test
 - **Étudiant** : etudiant@ibam.bf / password
 - **Scolarité** : scolarite@ibam.bf / password  
 - **Enseignant** : enseignant@ibam.bf / password
 - **DA** : da@ibam.bf / password
 
-## 📋 Workflow
+##  Workflow
 BROUILLON → SOUMISE → RECEVABLE → IMPUTEE → VALIDEE → TRAITEE

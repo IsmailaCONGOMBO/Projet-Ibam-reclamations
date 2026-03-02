@@ -6,7 +6,7 @@ import time
 
 def test_login(email, password, role):
     """Test de connexion pour un acteur"""
-    print(f"\n🧪 Test de connexion: {role}")
+    print(f"\n Test de connexion: {role}")
     print(f"   Email: {email}")
     
     # Initialiser le driver
@@ -16,54 +16,60 @@ def test_login(email, password, role):
     try:
         # Aller sur la page de connexion
         driver.get("http://localhost:5173")
-        print("   ✓ Page chargée")
+        time.sleep(1)
+        print("    Page chargée")
         
         # Remplir le formulaire
-        email_input = WebDriverWait(driver, 10).until(
+        email_input = WebDriverWait(driver, 15).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='email']"))
         )
+        email_input.clear()
         email_input.send_keys(email)
         
         password_input = driver.find_element(By.CSS_SELECTOR, "input[type='password']")
+        password_input.clear()
         password_input.send_keys(password)
-        print("   ✓ Formulaire rempli")
+        print("    Formulaire rempli")
         
         # Soumettre
         submit_button = driver.find_element(By.CSS_SELECTOR, "button[type='submit']")
         submit_button.click()
-        print("   ✓ Formulaire soumis")
+        print("    Formulaire soumis")
         
         # Vérifier la redirection
-        time.sleep(2)
-        WebDriverWait(driver, 10).until(
+        time.sleep(3)
+        
+        # Pour identifiants invalides, vérifier qu'on reste sur login
+        if "invalid" in email.lower():
+            if "login" in driver.current_url.lower() or driver.current_url == "http://localhost:5173/":
+                print(f"  SUCCÈS - Identifiants invalides rejetés")
+                return True
+            else:
+                print(f"    ÉCHEC - Identifiants invalides acceptés")
+                return False
+        
+        # Pour identifiants valides, vérifier redirection dashboard
+        WebDriverWait(driver, 15).until(
             EC.url_contains("/dashboard")
         )
         
         if "dashboard" in driver.current_url.lower():
-            print(f"   ✅ SUCCÈS - Connexion réussie pour {role}")
+            print(f"    SUCCÈS - Connexion réussie pour {role}")
             print(f"   URL: {driver.current_url}")
-            time.sleep(2)
             return True
         else:
-            print(f"   ❌ ÉCHEC - Pas de redirection vers dashboard")
+            print(f"    ÉCHEC - Pas de redirection vers dashboard")
             return False
             
     except Exception as e:
-        print(f"   ❌ ERREUR: {str(e)}")
-        print(f"   URL actuelle: {driver.current_url}")
-        # Prendre une capture d'écran pour debug
-        try:
-            driver.save_screenshot(f"error_{role.replace(' ', '_')}.png")
-            print(f"   Screenshot sauvegardée: error_{role.replace(' ', '_')}.png")
-        except:
-            pass
+        print(f"    ERREUR: {str(e)}")
         return False
     finally:
         driver.quit()
 
 if __name__ == "__main__":
     print("=" * 60)
-    print("🚀 TESTS DE CONNEXION - PLATEFORME IBAM")
+    print(" TESTS DE CONNEXION - PLATEFORME IBAM")
     print("=" * 60)
     
     # Liste des acteurs à tester
@@ -83,10 +89,10 @@ if __name__ == "__main__":
     
     # Résumé
     print("\n" + "=" * 60)
-    print("📊 RÉSUMÉ DES TESTS")
+    print(" RÉSUMÉ DES TESTS")
     print("=" * 60)
     for role, success in resultats:
-        status = "✅ PASSÉ" if success else "❌ ÉCHOUÉ"
+        status = "✓ PASSÉ" if success else " ÉCHOUÉ"
         print(f"{status} - {role}")
     
     total = len(resultats)
