@@ -219,7 +219,18 @@ class ReclamationController extends Controller
             return response()->json(['message' => 'Aucun fichier joint'], 404);
         }
 
-        // Utiliser le disque 'public' car c'est là qu'on a stocké le fichier via store(..., 'public')
-        return Storage::disk('public')->download($reclamation->piece_jointe);
+        $path = $reclamation->piece_jointe;
+        
+        if (!Storage::disk('public')->exists($path)) {
+            return response()->json(['message' => 'Fichier introuvable'], 404);
+        }
+
+        $file = Storage::disk('public')->get($path);
+        $mimeType = Storage::disk('public')->mimeType($path);
+        $fileName = basename($path);
+
+        return response($file, 200)
+            ->header('Content-Type', $mimeType)
+            ->header('Content-Disposition', 'inline; filename="' . $fileName . '"');
     }
 }

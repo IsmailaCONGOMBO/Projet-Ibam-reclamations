@@ -29,8 +29,12 @@ const JustificatifViewer = ({ justificatifs, piece_jointe }) => {
 
   const handleDownload = async (url, name) => {
     try {
-      const response = await fetch(url);
-      const blob = await response.blob();
+      // Utiliser api avec authentification
+      const response = await api.get(url, {
+        responseType: 'blob'
+      });
+      
+      const blob = response.data;
       const blobUrl = window.URL.createObjectURL(blob);
 
       const link = document.createElement('a');
@@ -42,8 +46,7 @@ const JustificatifViewer = ({ justificatifs, piece_jointe }) => {
       window.URL.revokeObjectURL(blobUrl);
     } catch (error) {
       console.error('Erreur de téléchargement:', error);
-      // Fallback: open in new tab if blob fetch fails
-      window.open(url, '_blank');
+      alert('Erreur lors du téléchargement du fichier');
     }
   };
 
@@ -64,6 +67,10 @@ const JustificatifViewer = ({ justificatifs, piece_jointe }) => {
               target="_blank"
               rel="noopener noreferrer"
               className="text-xs bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded text-gray-700"
+              onClick={(e) => {
+                e.preventDefault();
+                window.open(url, '_blank');
+              }}
             >
               Voir
             </a>
