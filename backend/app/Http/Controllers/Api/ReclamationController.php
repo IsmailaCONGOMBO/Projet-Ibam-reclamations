@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Reclamation;
+use App\Models\Note;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -58,7 +59,9 @@ class ReclamationController extends Controller
                 'message' => 'required|string',
                 'type' => 'required|string',
                 'matiere_id' => 'required|exists:matieres,id',
-                'piece_jointe' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120', // Obligatoire, PDF/Image, max 5MB
+                'note_actuelle' => 'required|numeric|min:0|max:20',
+                'note_souhaitee' => 'required|numeric|min:0|max:20',
+                'piece_jointe' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
             ]);
 
             $path = null;
@@ -70,9 +73,11 @@ class ReclamationController extends Controller
                 'objet' => $request->objet,
                 'message' => $request->message,
                 'type' => $request->type,
-                'status' => 'BROUILLON', // Par défaut
+                'status' => 'BROUILLON',
                 'etudiant_id' => Auth::id(),
                 'matiere_id' => $request->matiere_id,
+                'note_actuelle' => $request->note_actuelle,
+                'note_souhaitee' => $request->note_souhaitee,
                 'piece_jointe' => $path,
             ]);
 
@@ -100,7 +105,7 @@ class ReclamationController extends Controller
     {
         $this->authorize('update', $reclamation);
 
-        $reclamation->update($request->only(['objet', 'message', 'type', 'matiere_id']));
+        $reclamation->update($request->only(['objet', 'message', 'type', 'matiere_id', 'note_actuelle', 'note_souhaitee']));
 
         return response()->json($reclamation);
     }
@@ -192,7 +197,7 @@ class ReclamationController extends Controller
     // Etape 6: Scolarité finalise (Corrige la note ou clôture)
     public function finaliser(Request $request, Reclamation $reclamation)
     {
-        $this->authorize('finaliser', $reclamation); // Policy check: User is SCOLARITE
+        $this->authorize('finaliser', $reclamation);
 
         $reclamation->update([
             'status' => 'TRAITE',
@@ -200,12 +205,27 @@ class ReclamationController extends Controller
             'date_validation' => now(),
         ]);
 
+        // Mettre à jour la note si la réclamation a été validée par l'enseignant
+        if ($reclamation->status === 'TRAITE' && $reclamation->note_corrigee) {
+            Note::updateOrCreate(
+                [
+                    'etudiant_id' => $reclamation->etudiant_id,
+                    'matiere_id' => $reclamation->matiere_id,
+                    'annee_academique' => date('Y') . '-' . (date('Y') + 1),
+                    'type_evaluation' => 'EXAMEN'
+                ],
+                [
+                    'valeur' => $reclamation->note_corrigee,
+                    'date_evaluation' => now()
+                ]
+            );
+        }
+
         // Envoyer email à l'étudiant
         try {
             \Illuminate\Support\Facades\Mail::to($reclamation->etudiant->email)->send(new \App\Mail\ReclamationTraitee($reclamation));
         } catch (\Exception $e) {
-            // Log error but don't fail request
-             \Illuminate\Support\Facades\Log::error('Erreur envoi mail: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Erreur envoi mail: ' . $e->getMessage());
         }
 
         return response()->json($reclamation);

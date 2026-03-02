@@ -39,7 +39,6 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                 return [
                     ...common,
                     { name: 'Réclamations', path: '/enseignant', icon: DocumentTextIcon },
-                    { name: 'Mes Étudiants', path: '/teacher-students', icon: UserGroupIcon },
                 ];
             case 'ETUDIANT':
                 return [

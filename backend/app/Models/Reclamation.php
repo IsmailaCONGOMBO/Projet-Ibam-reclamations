@@ -28,6 +28,7 @@ class Reclamation extends Model
         'piece_jointe',
         'status',
         'note_actuelle',
+        'note_souhaitee',
         'note_corrigee',
         'commentaire_scolarite',
         'decision_enseignant',
@@ -40,6 +41,7 @@ class Reclamation extends Model
         'date_soumission' => 'datetime', 
         'date_traitement' => 'datetime',
         'note_actuelle' => 'decimal:2',
+        'note_souhaitee' => 'decimal:2',
         'note_corrigee' => 'decimal:2'
     ];
 

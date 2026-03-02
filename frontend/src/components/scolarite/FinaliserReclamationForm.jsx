@@ -18,6 +18,24 @@ export default function FinaliserReclamationForm({ reclamation, onSuccess, onCan
     return (
         <div className="bg-white p-6 rounded-lg shadow mt-4 border border-orange-200">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Validation Finale (Scolarité)</h3>
+            
+            <div className="mb-4 bg-gray-50 p-4 rounded">
+                <div className="grid grid-cols-3 gap-4 text-sm">
+                    <div>
+                        <span className="font-medium text-gray-700">Note actuelle:</span>
+                        <span className="ml-2 font-semibold">{reclamation.note_actuelle}/20</span>
+                    </div>
+                    <div>
+                        <span className="font-medium text-gray-700">Note souhaitée:</span>
+                        <span className="ml-2 font-semibold text-indigo-600">{reclamation.note_souhaitee}/20</span>
+                    </div>
+                    <div>
+                        <span className="font-medium text-gray-700">Note corrigée:</span>
+                        <span className="ml-2 font-semibold text-green-600">{reclamation.note_corrigee}/20</span>
+                    </div>
+                </div>
+            </div>
+
             <p className="text-sm text-gray-500 mb-4">
                 Vous êtes sur le point de valider et clôturer cette réclamation.
             </p>

@@ -12,7 +12,6 @@ import FiliereManagement from './components/admin/FiliereManagement';
 import MatiereManagement from './components/admin/MatiereManagement';
 import Layout from './components/layout/Layout';
 import StudentsListPage from './pages/StudentsListPage';
-import TeacherStudentsPage from './pages/TeacherStudentsPage';
 import AdminStudentsPage from './pages/AdminStudentsPage';
 
 function App() {
@@ -93,14 +92,6 @@ function App() {
               element={
                 <ProtectedRoute roles={['SCOLARITE']}>
                   <StudentsListPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/teacher-students"
-              element={
-                <ProtectedRoute roles={['ENSEIGNANT']}>
-                  <TeacherStudentsPage />
                 </ProtectedRoute>
               }
             />

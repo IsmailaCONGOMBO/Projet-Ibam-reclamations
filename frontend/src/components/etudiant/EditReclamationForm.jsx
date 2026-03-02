@@ -7,19 +7,39 @@ import api from '../../services/api';
 export default function EditReclamationForm({ reclamation, onSuccess }) {
     const { user } = useAuth();
     const [matieres, setMatieres] = useState([]);
-    const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
+    const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm({
         defaultValues: {
-            objet: reclamation?.objet || '',
-            message: reclamation?.message || '',
-            type: reclamation?.type || 'NOTE',
-            matiere_id: reclamation?.matiere_id || '',
+            objet: '',
+            message: '',
+            type: 'NOTE',
+            matiere_id: '',
+            note_actuelle: '',
+            note_souhaitee: '',
         }
     });
 
     useEffect(() => {
-        // Fetch matieres
         api.get('/matieres').then(res => setMatieres(res.data));
     }, []);
+
+    useEffect(() => {
+        if (reclamation && matieres.length > 0) {
+            console.log('Reset form with:', {
+                matiere_id: reclamation.matiere_id,
+                objet: reclamation.objet,
+                note_actuelle: reclamation.note_actuelle,
+                note_souhaitee: reclamation.note_souhaitee
+            });
+            reset({
+                objet: reclamation.objet || '',
+                message: reclamation.message || '',
+                type: reclamation.type || 'NOTE',
+                matiere_id: String(reclamation.matiere_id) || '',
+                note_actuelle: reclamation.note_actuelle || '',
+                note_souhaitee: reclamation.note_souhaitee || '',
+            });
+        }
+    }, [reclamation, matieres, reset]);
 
     const onSubmit = async (data) => {
         try {
@@ -32,6 +52,8 @@ export default function EditReclamationForm({ reclamation, onSuccess }) {
             formData.append('message', data.message);
             formData.append('type', data.type);
             formData.append('matiere_id', data.matiere_id);
+            formData.append('note_actuelle', data.note_actuelle);
+            formData.append('note_souhaitee', data.note_souhaitee);
 
             // Gestion du fichier uniquement en création pour l'instant (simplification)
             if (!reclamation && data.piece_jointe[0]) {
@@ -91,6 +113,42 @@ export default function EditReclamationForm({ reclamation, onSuccess }) {
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                 />
                 {errors.objet && <span className="text-red-500 text-sm">{errors.objet.message}</span>}
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+                <div>
+                    <label className="block text-sm font-medium text-gray-700">Note actuelle</label>
+                    <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        max="20"
+                        {...register('note_actuelle', { 
+                            required: 'La note actuelle est requise',
+                            min: { value: 0, message: 'Min 0' },
+                            max: { value: 20, message: 'Max 20' }
+                        })}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    />
+                    {errors.note_actuelle && <span className="text-red-500 text-sm">{errors.note_actuelle.message}</span>}
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium text-gray-700">Note souhaitée</label>
+                    <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        max="20"
+                        {...register('note_souhaitee', { 
+                            required: 'La note souhaitée est requise',
+                            min: { value: 0, message: 'Min 0' },
+                            max: { value: 20, message: 'Max 20' }
+                        })}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    />
+                    {errors.note_souhaitee && <span className="text-red-500 text-sm">{errors.note_souhaitee.message}</span>}
+                </div>
             </div>
 
             <div>

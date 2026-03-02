@@ -28,6 +28,17 @@ export default function TraiterReclamationForm({ reclamation, onSuccess }) {
         <div className="bg-white p-6 rounded-lg shadow mt-4 border border-indigo-200">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Traitement Enseignant</h3>
 
+            <div className="mb-4 grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded">
+                <div>
+                    <span className="text-sm font-medium text-gray-700">Note actuelle:</span>
+                    <span className="ml-2 text-lg font-semibold text-gray-900">{reclamation.note_actuelle}/20</span>
+                </div>
+                <div>
+                    <span className="text-sm font-medium text-gray-700">Note souhaitée:</span>
+                    <span className="ml-2 text-lg font-semibold text-indigo-600">{reclamation.note_souhaitee}/20</span>
+                </div>
+            </div>
+
             <div className="mb-6">
                 <JustificatifViewer piece_jointe={reclamation.piece_jointe} reclamationId={reclamation.id} />
             </div>
