@@ -59,6 +59,7 @@ class ReclamationController extends Controller
                 'message' => 'required|string',
                 'type' => 'required|string',
                 'matiere_id' => 'required|exists:matieres,id',
+                'enseignant_id' => 'required|exists:users,id',
                 'note_actuelle' => 'required|numeric|min:0|max:20',
                 'note_souhaitee' => 'required|numeric|min:0|max:20',
                 'piece_jointe' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
@@ -76,6 +77,7 @@ class ReclamationController extends Controller
                 'status' => 'BROUILLON',
                 'etudiant_id' => Auth::id(),
                 'matiere_id' => $request->matiere_id,
+                'enseignant_id' => $request->enseignant_id,
                 'note_actuelle' => $request->note_actuelle,
                 'note_souhaitee' => $request->note_souhaitee,
                 'piece_jointe' => $path,
@@ -105,7 +107,7 @@ class ReclamationController extends Controller
     {
         $this->authorize('update', $reclamation);
 
-        $reclamation->update($request->only(['objet', 'message', 'type', 'matiere_id', 'note_actuelle', 'note_souhaitee']));
+        $reclamation->update($request->only(['objet', 'message', 'type', 'matiere_id', 'enseignant_id', 'note_actuelle', 'note_souhaitee']));
 
         return response()->json($reclamation);
     }

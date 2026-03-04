@@ -7,20 +7,48 @@ import api from '../../services/api';
 export default function EditReclamationForm({ reclamation, onSuccess }) {
     const { user } = useAuth();
     const [matieres, setMatieres] = useState([]);
-    const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm({
+    const [enseignants, setEnseignants] = useState([]);
+    const { register, handleSubmit, reset, watch, setValue, formState: { errors, isSubmitting } } = useForm({
         defaultValues: {
             objet: '',
             message: '',
-            type: 'NOTE',
+            type: 'ERREUR_COMPTE',
+            type_autre: '',
             matiere_id: '',
+            enseignant_id: '',
             note_actuelle: '',
             note_souhaitee: '',
         }
     });
 
+    const matiereId = watch('matiere_id');
+    const typeValue = watch('type');
+
     useEffect(() => {
         api.get('/matieres').then(res => setMatieres(res.data));
     }, []);
+
+    useEffect(() => {
+        if (matiereId) {
+            api.get(`/matieres/${matiereId}`)
+                .then(res => {
+                    if (res.data.enseignant) {
+                        setEnseignants([res.data.enseignant]);
+                        setValue('enseignant_id', res.data.enseignant.id);
+                    } else {
+                        setEnseignants([]);
+                        setValue('enseignant_id', '');
+                    }
+                })
+                .catch(() => {
+                    setEnseignants([]);
+                    setValue('enseignant_id', '');
+                });
+        } else {
+            setEnseignants([]);
+            setValue('enseignant_id', '');
+        }
+    }, [matiereId, setValue]);
 
     useEffect(() => {
         if (reclamation && matieres.length > 0) {
@@ -30,11 +58,14 @@ export default function EditReclamationForm({ reclamation, onSuccess }) {
                 note_actuelle: reclamation.note_actuelle,
                 note_souhaitee: reclamation.note_souhaitee
             });
+            const isAutreType = !['ERREUR_COMPTE', 'PARTIE_NON_CORRIGEE'].includes(reclamation.type);
             reset({
                 objet: reclamation.objet || '',
                 message: reclamation.message || '',
-                type: reclamation.type || 'NOTE',
+                type: isAutreType ? 'AUTRE' : reclamation.type,
+                type_autre: isAutreType ? reclamation.type : '',
                 matiere_id: String(reclamation.matiere_id) || '',
+                enseignant_id: String(reclamation.enseignant_id) || '',
                 note_actuelle: reclamation.note_actuelle || '',
                 note_souhaitee: reclamation.note_souhaitee || '',
             });
@@ -50,8 +81,9 @@ export default function EditReclamationForm({ reclamation, onSuccess }) {
 
             formData.append('objet', data.objet);
             formData.append('message', data.message);
-            formData.append('type', data.type);
+            formData.append('type', data.type === 'AUTRE' ? data.type_autre : data.type);
             formData.append('matiere_id', data.matiere_id);
+            formData.append('enseignant_id', data.enseignant_id);
             formData.append('note_actuelle', data.note_actuelle);
             formData.append('note_souhaitee', data.note_souhaitee);
 
@@ -93,17 +125,48 @@ export default function EditReclamationForm({ reclamation, onSuccess }) {
             </div>
 
             <div>
+                <label className="block text-sm font-medium text-gray-700">Enseignant</label>
+                <select
+                    {...register('enseignant_id', { required: "L'enseignant est requis" })}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    disabled={!matiereId || enseignants.length === 0}
+                >
+                    <option value="">Sélectionner un enseignant</option>
+                    {enseignants.map(e => (
+                        <option key={e.id} value={e.id}>{e.prenom} {e.nom}</option>
+                    ))}
+                </select>
+                {errors.enseignant_id && <span className="text-red-500 text-sm">{errors.enseignant_id.message}</span>}
+                {matiereId && enseignants.length === 0 && (
+                    <p className="text-sm text-gray-500 mt-1">Aucun enseignant assigné à cette matière</p>
+                )}
+            </div>
+
+            <div>
                 <label className="block text-sm font-medium text-gray-700">Type</label>
                 <select
                     {...register('type', { required: 'Le type est requis' })}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                 >
-                    <option value="NOTE">Erreur de Note</option>
-                    <option value="ABSENCE">Absence injustifiée</option>
+                    <option value="ERREUR_COMPTE">Erreur de Compte</option>
+                    <option value="PARTIE_NON_CORRIGEE">Partie non corrigée</option>
                     <option value="AUTRE">Autre</option>
                 </select>
                 {errors.type && <span className="text-red-500 text-sm">{errors.type.message}</span>}
             </div>
+
+            {typeValue === 'AUTRE' && (
+                <div>
+                    <label className="block text-sm font-medium text-gray-700">Précisez le type</label>
+                    <input
+                        type="text"
+                        {...register('type_autre', { required: typeValue === 'AUTRE' ? 'Veuillez préciser le type' : false })}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                        placeholder="Ex: Erreur de saisie, Copie non rendue..."
+                    />
+                    {errors.type_autre && <span className="text-red-500 text-sm">{errors.type_autre.message}</span>}
+                </div>
+            )}
 
             <div>
                 <label className="block text-sm font-medium text-gray-700">Objet</label>
