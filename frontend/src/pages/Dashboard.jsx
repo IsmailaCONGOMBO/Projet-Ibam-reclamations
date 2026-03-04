@@ -67,12 +67,6 @@ const Dashboard = () => {
                 path: "/enseignant",
                 color: "bg-indigo-500",
             },
-            {
-                title: "Mes Étudiants",
-                icon: UserGroupIcon,
-                path: "/teacher-students",
-                color: "bg-cyan-500",
-            },
         ],
         ETUDIANT: [
             {

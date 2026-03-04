@@ -63,6 +63,14 @@ const VerifyReclamationForm = ({ reclamation, onSuccess, onCancel }) => {
             <p className="text-gray-600">{reclamation.matiere?.nom_matiere}</p>
           </div>
           <div>
+            <h3 className="font-medium text-gray-900">Note actuelle</h3>
+            <p className="text-gray-600 font-semibold">{reclamation.note_actuelle}/20</p>
+          </div>
+          <div>
+            <h3 className="font-medium text-gray-900">Note souhaitée</h3>
+            <p className="text-indigo-600 font-semibold">{reclamation.note_souhaitee}/20</p>
+          </div>
+          <div>
             <h3 className="font-medium text-gray-900">Date soumission</h3>
             <p className="text-gray-600">{reclamation.date_soumission}</p>
           </div>

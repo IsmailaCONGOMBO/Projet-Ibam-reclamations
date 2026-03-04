@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -29,6 +29,16 @@ const Login = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full">
+        {/* Bouton retour */}
+        <div className="mb-4">
+          <Link
+            to="/"
+            className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            ← Retour à l'accueil
+          </Link>
+        </div>
+        
         {/* Logo et titre */}
         <div className="text-center mb-8">
           <div className="mx-auto h-16 w-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg">
@@ -96,30 +106,6 @@ const Login = () => {
               )}
             </button>
           </form>
-        </div>
-        
-        {/* Comptes de test */}
-        <div className="mt-8 bg-white/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-100">
-          <h3 className="text-sm font-semibold text-gray-700 mb-3">Comptes de démonstration</h3>
-          <div className="grid grid-cols-2 gap-3 text-xs">
-            <div className="bg-white rounded-lg p-3 border border-gray-100">
-              <div className="font-medium text-gray-900">Étudiant</div>
-              <div className="text-gray-600 mt-1">etudiant@ibam.bf</div>
-            </div>
-            <div className="bg-white rounded-lg p-3 border border-gray-100">
-              <div className="font-medium text-gray-900">Scolarité</div>
-              <div className="text-gray-600 mt-1">scolarite@ibam.bf</div>
-            </div>
-            <div className="bg-white rounded-lg p-3 border border-gray-100">
-              <div className="font-medium text-gray-900">Enseignant</div>
-              <div className="text-gray-600 mt-1">enseignant@ibam.bf</div>
-            </div>
-            <div className="bg-white rounded-lg p-3 border border-gray-100">
-              <div className="font-medium text-gray-900">Directeur</div>
-              <div className="text-gray-600 mt-1">da@ibam.bf</div>
-            </div>
-          </div>
-          <p className="text-xs text-gray-500 mt-3 text-center">Mot de passe : password</p>
         </div>
       </div>
     </div>

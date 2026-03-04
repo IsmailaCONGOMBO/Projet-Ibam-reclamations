@@ -1,5 +1,33 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import api from '../services/api';
+
+const ImagePreview = ({ url, name }) => {
+  const [imageUrl, setImageUrl] = useState(null);
+
+  useEffect(() => {
+    const loadImage = async () => {
+      try {
+        const response = await api.get(url, { responseType: 'blob' });
+        const blobUrl = window.URL.createObjectURL(response.data);
+        setImageUrl(blobUrl);
+      } catch (error) {
+        console.error('Erreur chargement image:', error);
+      }
+    };
+    loadImage();
+    return () => {
+      if (imageUrl) window.URL.revokeObjectURL(imageUrl);
+    };
+  }, [url]);
+
+  if (!imageUrl) return <div className="text-gray-400 text-xs">Chargement...</div>;
+  
+  return (
+    <div className="mt-2 text-center">
+      <img src={imageUrl} alt={name} className="max-h-64 rounded shadow mx-auto" />
+    </div>
+  );
+};
 
 const JustificatifViewer = ({ justificatifs, piece_jointe }) => {
   // If piece_jointe string path is provided, use it.
@@ -9,12 +37,10 @@ const JustificatifViewer = ({ justificatifs, piece_jointe }) => {
   // We can construct the URL if we know the backend URL.
   // Let's rely on a helper or env.
 
-  const BACKEND_URL = 'http://localhost:8000'; // Should come from env in real app
-
   const getFileUrl = (path) => {
     if (!path) return null;
-    if (path.startsWith('http')) return path;
-    return `${BACKEND_URL}/storage/${path}`;
+    const filename = path.split('/').pop();
+    return `reclamations/justificatifs/${filename}`;
   };
 
   const hasFile = piece_jointe || (justificatifs && justificatifs.length > 0);
@@ -29,8 +55,11 @@ const JustificatifViewer = ({ justificatifs, piece_jointe }) => {
 
   const handleDownload = async (url, name) => {
     try {
-      const response = await fetch(url);
-      const blob = await response.blob();
+      const response = await api.get(url, {
+        responseType: 'blob'
+      });
+      
+      const blob = response.data;
       const blobUrl = window.URL.createObjectURL(blob);
 
       const link = document.createElement('a');
@@ -42,8 +71,22 @@ const JustificatifViewer = ({ justificatifs, piece_jointe }) => {
       window.URL.revokeObjectURL(blobUrl);
     } catch (error) {
       console.error('Erreur de téléchargement:', error);
-      // Fallback: open in new tab if blob fetch fails
-      window.open(url, '_blank');
+      alert('Erreur lors du téléchargement du fichier');
+    }
+  };
+
+  const handleView = async (url, name) => {
+    try {
+      const response = await api.get(url, {
+        responseType: 'blob'
+      });
+      
+      const blob = response.data;
+      const blobUrl = window.URL.createObjectURL(blob);
+      window.open(blobUrl, '_blank');
+    } catch (error) {
+      console.error('Erreur d\'affichage:', error);
+      alert('Erreur lors de l\'affichage du fichier');
     }
   };
 
@@ -59,14 +102,12 @@ const JustificatifViewer = ({ justificatifs, piece_jointe }) => {
             <span className="text-sm font-medium truncate max-w-xs">{name}</span>
           </div>
           <div className="flex space-x-2">
-            <a
-              href={url}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              onClick={() => handleView(url, name)}
               className="text-xs bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded text-gray-700"
             >
               Voir
-            </a>
+            </button>
             <button
               onClick={() => handleDownload(url, name)}
               className="text-xs bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded text-white"
@@ -77,9 +118,7 @@ const JustificatifViewer = ({ justificatifs, piece_jointe }) => {
         </div>
 
         {isImage && (
-          <div className="mt-2 text-center">
-            <img src={url} alt="Aperçu" className="max-h-64 rounded shadow mx-auto" />
-          </div>
+          <ImagePreview url={url} name={name} />
         )}
       </div>
     );
@@ -91,7 +130,7 @@ const JustificatifViewer = ({ justificatifs, piece_jointe }) => {
       {piece_jointe && renderFileItem(piece_jointe.split('/').pop(), getFileUrl(piece_jointe))}
 
       {/* Legacy support for array */}
-      {justificatifs && justificatifs.map(j => renderFileItem(j.nom_fichier, `${BACKEND_URL}/justificatifs/${j.id}/download`))}
+      {justificatifs && justificatifs.map(j => renderFileItem(j.nom_fichier, `justificatifs/${j.id}/download`))}
     </div>
   );
 };

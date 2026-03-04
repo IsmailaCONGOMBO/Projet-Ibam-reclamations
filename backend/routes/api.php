@@ -58,4 +58,5 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Download piece_jointe principale
     Route::get('reclamations/{reclamation}/download', [ReclamationController::class, 'downloadPieceJointe']);
+    Route::get('reclamations/justificatifs/{filename}', [ReclamationController::class, 'downloadByFilename']);
 });

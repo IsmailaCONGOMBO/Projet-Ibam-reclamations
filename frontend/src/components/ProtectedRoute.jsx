@@ -16,13 +16,12 @@ const ProtectedRoute = ({ children, roles = [] }) => {
     return <Navigate to="/login" replace />;
   }
 
-  // Vérification de rôle améliorée (supporte multi-rôles et string unique)
   if (roles.length > 0) {
     const userRoles = user.roles ? user.roles.map(r => r.name) : (user.role ? [user.role] : []);
     const hasPermission = roles.some(role => userRoles.includes(role));
 
     if (!hasPermission) {
-      return <Navigate to="/unauthorized" replace />;
+      return <Navigate to="/login" replace />;
     }
   }
 

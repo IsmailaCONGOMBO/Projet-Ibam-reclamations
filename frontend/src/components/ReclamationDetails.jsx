@@ -87,6 +87,17 @@ const ReclamationDetails = ({ reclamationId, onClose }) => {
             <p className="mt-1 text-sm text-gray-900">{reclamation.objet}</p>
           </div>
 
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Note actuelle</label>
+              <p className="mt-1 text-sm text-gray-900">{reclamation.note_actuelle}/20</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Note souhaitée</label>
+              <p className="mt-1 text-sm text-gray-900">{reclamation.note_souhaitee}/20</p>
+            </div>
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700">Motif détaillé</label>
             <p className="mt-1 text-sm text-gray-900 whitespace-pre-wrap">{reclamation.message}</p>
